@@ -182,6 +182,7 @@ Versions are pinned exactly (no `^`) and locked by `package-lock.json`. Only ver
 - Works inside a WebView: no cookies, no login, no server.
 - Plain JSON data with stable ids.
 - Site config lives in `src/config/site.config.ts`: site URL, QR, light tiles, organisation name.
+- New data added by «next» (the live app's `data/` stays as it is) lives in `src/data-next/`. It imports nothing but types: first `car-entrances.ts`, three new vehicle entrances to the car park. They are shown by the map's `car-entrances` layer (with the parking pill only), and their open/closed state is `state/entrances.ts`, changed from the supervisor's page.
 - Hosting: static files from `dist/`. `vercel.json` sets the Vite build for a new, separate Vercel project, `sw.js` uncached and hashed assets immutable (README «النشر»).
 
 ## 9. Quality gates
