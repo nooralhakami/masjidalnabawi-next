@@ -43,6 +43,8 @@
   --route-level-b: #3f7d20;
   --ramp-up: #f5d90a;
   --ramp-down: #3f7d20;
+  /* the visitor's dot (the live app's blue, in both themes) */
+  --me: #0288d1;
 
   /* semantic: light */
   --bg: #f4f1ea;

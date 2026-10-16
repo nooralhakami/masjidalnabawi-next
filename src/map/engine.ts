@@ -12,6 +12,8 @@ import { lookOf } from '../presentation/markers';
 import { ICON_FROM, INNER_NUMBER_FROM, OUTER_CHIP_FROM, PAIR_NUMBER_FROM, GATE_NAME_FROM, markerLook } from '../presentation/marker-look';
 import type { IconName } from '../presentation/icons';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
+import { MeMarker } from './me';
+import { RouteLayer, type RouteText } from './route';
 import { LEGACY_MAX, LEGACY_MIN, fitView, haramBounds, legacyZoom, mapZoom } from './zoom';
 
 setWorkerUrl(workerUrl);
@@ -36,6 +38,10 @@ export interface MapEngineOptions {
   /** A tap on the map: the place under it, or null for empty map. */
   onPick?(id: number | null): void;
   attribution?: { satellite: string; osm: string };
+  /** Words on the route's labels, in the visitor's language. */
+  routeText: RouteText;
+  /** The visitor's dot, for screen readers («أنت هنا»). */
+  meLabel(): string;
 }
 
 const DIRS: Record<string, string> = { south: 'dir-south', west: 'dir-west', north: 'dir-north', east: 'dir-east' };
@@ -52,6 +58,9 @@ const at = mapZoom;
  */
 export class MapEngine {
   readonly map: MLMap;
+  /** The trip on the map (phase 5), and the visitor's dot. */
+  readonly route: RouteLayer;
+  readonly me: MeMarker;
   private version = 1;
   private view: PoiView = { ids: [], filter: 'all', withFeatured: true, hidden: false };
   /** The place whose card is open: drawn as a pin; every other place is hidden meanwhile (as the live app). */
@@ -109,6 +118,8 @@ export class MapEngine {
     this.map.addControl(new AttributionControl({ compact: false, customAttribution: opts.attribution?.osm ?? '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a>' }), 'bottom-left');
     this.map.addControl(new ScaleControl({ unit: 'metric', maxWidth: 90 }), 'bottom-left');
     const ratio = Math.min(3, Math.max(1, devicePixelRatio || 1));
+    this.route = new RouteLayer(this.map, this.palette, opts.routeText, ratio);
+    this.me = new MeMarker(this.map, () => opts.meLabel(), () => this.palette.get('me'));
     const drawer = (this.drawer = createDrawer({
       palette: this.palette,
       icons: this.icons,
@@ -316,6 +327,9 @@ export class MapEngine {
       source: 'pois',
       layout: { ...symbol, 'icon-image': this.img('feat:', ['get', 'icon']), 'icon-size': ['step', ['zoom'], 1, at(19), 30 / 24] },
     });
+    // The route and the visitor's dot under the chosen place's pin.
+    this.route.install('selected');
+    this.me.install('selected');
     this.applyView();
     this.prewarm();
   }
@@ -448,7 +462,8 @@ export class MapEngine {
     this.map.removeLayer('featured');
     this.map.removeLayer('selected');
     for (const id of ['esri', 'light', 'women-fill', 'women-line', 'inner-dots', 'outer-dots', 'facility-dots', 'mixed-dots', 'facilities', 'parking', 'outer-chips', 'inner-numbers', 'pairs', 'gate-names']) if (this.map.getLayer(id)) this.map.removeLayer(id);
-    for (const id of this.map.listImages()) if (id.endsWith(`@${old}`)) this.map.removeImage(id);
+    for (const id of this.map.listImages()) if (id.endsWith(`@${old}`) && !id.startsWith('rt')) this.map.removeImage(id);
+    this.route.restyle();
     this.addLayers();
     this.setBase(this.base);
   }
@@ -500,6 +515,12 @@ export class MapEngine {
 
   /** The place under a tap: the nearest marker within 16 px (the live app's 32 px hit area). */
   private pick(x: number, y: number) {
+    // An alternative route (its line or its time label) is chosen before any place.
+    const alt = this.route.hitAlternative(x, y);
+    if (alt !== null) {
+      this.route.pick(alt);
+      return;
+    }
     const layers = ['selected', 'featured', 'facilities', 'facility-dots', 'mixed-dots', 'parking', 'outer-chips', 'inner-numbers', 'outer-dots', 'inner-dots'].filter((l) => this.map.getLayer(l));
     const hits = this.map.queryRenderedFeatures(
       [
