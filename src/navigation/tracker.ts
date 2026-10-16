@@ -1,6 +1,7 @@
 import type { LatLng } from '../data/types';
 import type { LiveFix, LocationService } from '../location/LocationService';
 import { AwayDetector, RouteTrack, onAlternative } from '../location/progress';
+import type { NavigationState, StepKind, StepView } from '../presentation/route-view';
 
 /**
  * Live navigation, ported from the live app's src/navigation/NavigationTracker.ts (e0c6ca7).
@@ -9,19 +10,12 @@ import { AwayDetector, RouteTrack, onAlternative } from '../location/progress';
  * reached through `NavigationHost`, and the status panel is gone: the UI renders `snapshot`.
  */
 
-export type NavigationState = 'locating' | 'updated' | 'low-accuracy' | 'away' | 'signal-lost' | 'off-route' | 'error' | 'stopped' | 'arrived';
+export { STATE_LABEL, type NavigationState, type StepKind, type StepView } from '../presentation/route-view';
 
 /** One step of short, clear directions (inside the car park), as given by the route. */
 export interface NavStep {
-  kind: 'n' | 'e' | 's' | 'w' | 'up' | 'down' | 'lot_in' | 'lot_out';
+  kind: StepKind;
   path: LatLng[];
-}
-
-/** The car park instruction to show: the step now with the metres left in it, and the one after. */
-export interface StepView {
-  now: { kind: NavStep['kind']; meters: number } | null;
-  next: { kind: NavStep['kind']; meters: number | null } | null;
-  lot: number | null;
 }
 
 export interface NavigationSnapshot {
@@ -36,19 +30,6 @@ export interface NavigationSnapshot {
   progress: number;
   step: StepView | null;
 }
-
-/** i18n key for each state's status line (as in the live app's panel). */
-export const STATE_LABEL: Record<NavigationState, string> = {
-  'off-route': 'nav_off',
-  'low-accuracy': 'nav_low',
-  away: 'nav_away',
-  locating: 'nav_locating',
-  'signal-lost': 'nav_lost',
-  error: 'nav_error',
-  updated: 'nav_ok',
-  stopped: 'nav_ok',
-  arrived: 'nav_arrived',
-};
 
 /** What the tracker needs from the page: the visitor marker, the camera, and device features. */
 export interface NavigationHost {

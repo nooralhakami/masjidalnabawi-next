@@ -1,4 +1,4 @@
-import type { StepView } from '../../navigation/tracker';
+import type { StepView } from '../../presentation/route-view';
 import { useI18n } from '../i18n';
 import { Icon, type IconName } from '../kit/Icon';
 

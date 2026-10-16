@@ -7,7 +7,7 @@ const ROOT = join(__dirname, '../../src');
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((f) => {
     const p = join(dir, f);
-    return statSync(p).isDirectory() ? files(p) : p.endsWith('.ts') ? [p] : [];
+    return statSync(p).isDirectory() ? files(p) : /\.tsx?$/.test(p) ? [p] : [];
   });
 }
 const importsOf = (file: string): string[] =>
