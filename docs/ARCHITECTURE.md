@@ -61,10 +61,11 @@ src/
     sheet/       BottomSheet (spring) PlaceCard RouteCard StepBanner ArrivalCard GarageAsk
     search/      SearchArea (debounce 200 ms, ↑↓ Enter Esc, grouped results, recent searches)
     rawdah/      RawdahCard
-    stories/     (lazy chunk)
-    library/     (lazy chunk)
-    admin/       (lazy chunk)
+    stories/     StoryViewer + stories.css (lazy chunk, loaded on first open)
+    library/     Library + library.css (lazy chunk, with its texts: domain/mosque-places)
+    admin/       AdminPanel (lazy chunk, only with ?admin=1)
     lang/        LanguageMenu
+    rawdah/      RawdahCard, RawdahHost (30 s refresh; reports its height for the map's buttons)
   map/
     setup.ts       map, Esri + light raster sources, bounds, attribution, scale, rotation, compass
     zoom.ts        legacyZoom() — the one bridge between MapLibre zoom and the app's Leaflet-era thresholds
@@ -111,6 +112,8 @@ tests/unit/  tests/e2e/  scripts/perf.mjs
   - `map/route.show(plans)` draws the route, and `navigation/tracker` starts.
   - Snapshots go to the `nav` signal, so the UI counters and the step banner update and `map/route.focus(ahead150)` follows.
   - Updating the "ahead" line is a `setData` on a ≤150 m line: tiny and bounded.
+- **Deep links (as built).** `map-main` reads `?poi=`, `?visit=`, `?lib=`, `?admin=1` once and hands them to `App` as props, opened when it mounts (events sent earlier were lost, phase 4).
+- **Lazy parts.** `App` loads the stories, the library and the admin panel with dynamic `import()` on first use; their CSS is imported by the component, so Vite splits it with them.
 - **Language.**
   - Changing the `lang` signal sets `<html lang/dir>`, and the UI re-renders.
   - The map relabels: only the label sprites of the new language are drawn.
