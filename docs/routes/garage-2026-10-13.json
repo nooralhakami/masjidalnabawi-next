@@ -1,0 +1,1679 @@
+{
+ "_note": "Owner's drawing of the underground car park roads (2026-10-13), docs/routes/garage-drawing-2026-10-13.webp. Pixel vertices measured from the colours of the drawing; control points are the 36 facility markers 201–236 as shown in the screenshot (positions with data/overrides.json applied, metres in the local projection of src/routing/walk.ts). Build: python3 scripts/garage-from-drawing.py docs/routes/garage-2026-10-13.json",
+ "legend_ar": {
+  "entry": "الأزرق دخول",
+  "exit": "الأحمر خروج",
+  "ramp_up": "الأصفر صعود لدور A",
+  "ramp_down": "الأخضر نزول لدور B",
+  "shared": "البرتقالي مشترك",
+  "rule": "جميع الطرق يمين"
+ },
+ "control_points": [
+  {
+   "id": 220,
+   "px": [
+    739.3,
+    179.8
+   ],
+   "m": [
+    -308.98,
+    398.51
+   ]
+  },
+  {
+   "id": 222,
+   "px": [
+    838.8,
+    179.8
+   ],
+   "m": [
+    -250.47,
+    398.51
+   ]
+  },
+  {
+   "id": 224,
+   "px": [
+    1038.4,
+    180.0
+   ],
+   "m": [
+    -132.5,
+    398.51
+   ]
+  },
+  {
+   "id": 226,
+   "px": [
+    1197.2,
+    179.9
+   ],
+   "m": [
+    -40.25,
+    398.51
+   ]
+  },
+  {
+   "id": 228,
+   "px": [
+    1356.2,
+    179.8
+   ],
+   "m": [
+    53.5,
+    398.51
+   ]
+  },
+  {
+   "id": 230,
+   "px": [
+    1514.8,
+    179.8
+   ],
+   "m": [
+    148.75,
+    398.51
+   ]
+  },
+  {
+   "id": 219,
+   "px": [
+    739.2,
+    290.7
+   ],
+   "m": [
+    -308.98,
+    333.75
+   ]
+  },
+  {
+   "id": 221,
+   "px": [
+    838.7,
+    290.7
+   ],
+   "m": [
+    -250.47,
+    333.75
+   ]
+  },
+  {
+   "id": 223,
+   "px": [
+    1038.5,
+    290.6
+   ],
+   "m": [
+    -132.5,
+    333.75
+   ]
+  },
+  {
+   "id": 225,
+   "px": [
+    1197.2,
+    290.7
+   ],
+   "m": [
+    -40.25,
+    333.75
+   ]
+  },
+  {
+   "id": 227,
+   "px": [
+    1356.2,
+    290.7
+   ],
+   "m": [
+    53.5,
+    333.75
+   ]
+  },
+  {
+   "id": 229,
+   "px": [
+    1514.7,
+    290.8
+   ],
+   "m": [
+    148.75,
+    333.75
+   ]
+  },
+  {
+   "id": 231,
+   "px": [
+    1662.5,
+    290.6
+   ],
+   "m": [
+    235.0,
+    333.75
+   ]
+  },
+  {
+   "id": 232,
+   "px": [
+    1755.0,
+    290.7
+   ],
+   "m": [
+    289.75,
+    333.75
+   ]
+  },
+  {
+   "id": 218,
+   "px": [
+    739.3,
+    364.4
+   ],
+   "m": [
+    -308.98,
+    289.55
+   ]
+  },
+  {
+   "id": 217,
+   "px": [
+    838.7,
+    364.6
+   ],
+   "m": [
+    -250.47,
+    289.55
+   ]
+  },
+  {
+   "id": 233,
+   "px": [
+    1662.6,
+    482.6
+   ],
+   "m": [
+    235.0,
+    221.25
+   ]
+  },
+  {
+   "id": 234,
+   "px": [
+    1754.7,
+    482.1
+   ],
+   "m": [
+    289.75,
+    221.25
+   ]
+  },
+  {
+   "id": 216,
+   "px": [
+    739.3,
+    530.6
+   ],
+   "m": [
+    -308.98,
+    191.25
+   ]
+  },
+  {
+   "id": 215,
+   "px": [
+    838.8,
+    530.6
+   ],
+   "m": [
+    -250.47,
+    191.25
+   ]
+  },
+  {
+   "id": 235,
+   "px": [
+    1662.7,
+    600.9
+   ],
+   "m": [
+    235.0,
+    151.5
+   ]
+  },
+  {
+   "id": 236,
+   "px": [
+    1755.2,
+    600.8
+   ],
+   "m": [
+    289.75,
+    151.5
+   ]
+  },
+  {
+   "id": 214,
+   "px": [
+    739.2,
+    696.8
+   ],
+   "m": [
+    -308.98,
+    93.98
+   ]
+  },
+  {
+   "id": 213,
+   "px": [
+    838.8,
+    696.8
+   ],
+   "m": [
+    -250.47,
+    93.98
+   ]
+  },
+  {
+   "id": 212,
+   "px": [
+    739.2,
+    866.8
+   ],
+   "m": [
+    -308.98,
+    -6.75
+   ]
+  },
+  {
+   "id": 211,
+   "px": [
+    842.6,
+    866.7
+   ],
+   "m": [
+    -247.47,
+    -6.75
+   ]
+  },
+  {
+   "id": 209,
+   "px": [
+    842.6,
+    940.6
+   ],
+   "m": [
+    -247.47,
+    -49.5
+   ]
+  },
+  {
+   "id": 207,
+   "px": [
+    1012.5,
+    940.6
+   ],
+   "m": [
+    -147.25,
+    -49.5
+   ]
+  },
+  {
+   "id": 205,
+   "px": [
+    1189.8,
+    940.7
+   ],
+   "m": [
+    -42.75,
+    -49.5
+   ]
+  },
+  {
+   "id": 203,
+   "px": [
+    1356.2,
+    940.7
+   ],
+   "m": [
+    53.5,
+    -49.5
+   ]
+  },
+  {
+   "id": 201,
+   "px": [
+    1514.9,
+    940.7
+   ],
+   "m": [
+    148.75,
+    -49.5
+   ]
+  },
+  {
+   "id": 210,
+   "px": [
+    838.6,
+    1058.9
+   ],
+   "m": [
+    -250.47,
+    -117.75
+   ]
+  },
+  {
+   "id": 208,
+   "px": [
+    1012.6,
+    1058.8
+   ],
+   "m": [
+    -147.25,
+    -117.75
+   ]
+  },
+  {
+   "id": 206,
+   "px": [
+    1189.7,
+    1058.8
+   ],
+   "m": [
+    -42.75,
+    -117.75
+   ]
+  },
+  {
+   "id": 204,
+   "px": [
+    1356.1,
+    1058.9
+   ],
+   "m": [
+    53.5,
+    -117.75
+   ]
+  },
+  {
+   "id": 202,
+   "px": [
+    1514.7,
+    1059.0
+   ],
+   "m": [
+    148.75,
+    -117.75
+   ]
+  }
+ ],
+ "lanes": [
+  {
+   "id": "sultana-in",
+   "kind": "entry",
+   "certain": true,
+   "px": [
+    [
+     435.0,
+     181.96
+    ],
+    [
+     514.92,
+     186.51
+    ],
+    [
+     715.0,
+     186.82
+    ],
+    [
+     714.86,
+     317.01
+    ]
+   ],
+   "oneway": true,
+   "_note": "owner 2026-10-15 (second edit)"
+  },
+  {
+   "id": "north-lane",
+   "kind": "entry",
+   "certain": true,
+   "px": [
+    [
+     714.86,
+     317.01
+    ],
+    [
+     747.95,
+     317.07
+    ],
+    [
+     867.93,
+     317.25
+    ],
+    [
+     1289.96,
+     317.9
+    ],
+    [
+     1610.01,
+     318.4
+    ],
+    [
+     1617.99,
+     318.41
+    ]
+   ],
+   "oneway": true
+  },
+  {
+   "id": "east-lane",
+   "kind": "entry",
+   "certain": true,
+   "px": [
+    [
+     1640.09,
+     762.92
+    ],
+    [
+     1640.08,
+     774.82
+    ],
+    [
+     1640.05,
+     809.49
+    ],
+    [
+     1640.01,
+     844.17
+    ],
+    [
+     1639.97,
+     878.84
+    ],
+    [
+     1639.93,
+     922.7
+    ]
+   ],
+   "oneway": true,
+   "_note": "owner 2026-10-15 (on the satellite map: the east side lower)"
+  },
+  {
+   "id": "south-lane",
+   "kind": "entry",
+   "certain": true,
+   "px": [
+    [
+     1639.93,
+     922.7
+    ],
+    [
+     1493.31,
+     922.47
+    ],
+    [
+     1285.43,
+     922.15
+    ],
+    [
+     1079.93,
+     921.83
+    ],
+    [
+     949.94,
+     921.63
+    ],
+    [
+     898.35,
+     921.55
+    ],
+    [
+     868.67,
+     906.21
+    ],
+    [
+     868.69,
+     892.61
+    ]
+   ],
+   "oneway": true,
+   "_note": "Moved 8 m south (owner's correction 2026-10-13): beside the south facilities, not the mosque."
+  },
+  {
+   "id": "west-lane",
+   "kind": "entry",
+   "certain": true,
+   "px": [
+    [
+     868.69,
+     892.61
+    ],
+    [
+     868.9,
+     686.94
+    ],
+    [
+     869.08,
+     516.97
+    ],
+    [
+     869.28,
+     317.25
+    ]
+   ],
+   "oneway": true
+  },
+  {
+   "id": "outer-south",
+   "kind": "entry",
+   "certain": true,
+   "px": [
+    [
+     722.39,
+     1073.23
+    ],
+    [
+     818.44,
+     1073.38
+    ],
+    [
+     828.61,
+     1084.62
+    ],
+    [
+     1184.97,
+     1085.17
+    ],
+    [
+     1545.07,
+     1085.72
+    ],
+    [
+     1647.4,
+     1085.88
+    ],
+    [
+     1647.57,
+     919.31
+    ],
+    [
+     1647.67,
+     820.72
+    ],
+    [
+     1647.71,
+     782.65
+    ],
+    [
+     1655.37,
+     761.25
+    ],
+    [
+     1670.65,
+     748.52
+    ],
+    [
+     1689.5,
+     738.35
+    ],
+    [
+     1721.93,
+     721.41
+    ],
+    [
+     1754.19,
+     707.69
+    ],
+    [
+     1784.23,
+     700.76
+    ],
+    [
+     1793.06,
+     692.62
+    ],
+    [
+     1778.48,
+     684.1
+    ],
+    [
+     1749.63,
+     689.15
+    ],
+    [
+     1717.37,
+     700.66
+    ],
+    [
+     1684.94,
+     719.14
+    ],
+    [
+     1664.22,
+     735.25
+    ]
+   ],
+   "oneway": true,
+   "_note": "owner 2026-10-15 (on the satellite map: the east side lower)"
+  },
+  {
+   "id": "p13-exit",
+   "certain": true,
+   "oneway": true,
+   "kind": "exit",
+   "px": [
+    [
+     1648.07,
+     603.16
+    ],
+    [
+     1648.01,
+     657.55
+    ],
+    [
+     1643.56,
+     691.54
+    ],
+    [
+     1646.07,
+     725.54
+    ],
+    [
+     1654.88,
+     744.42
+    ]
+   ],
+   "_note": "owner 2026-10-15 (on the satellite map: the east side lower)"
+  },
+  {
+   "id": "p13-in",
+   "certain": true,
+   "oneway": true,
+   "kind": "entry",
+   "px": [
+    [
+     1664.22,
+     735.25
+    ],
+    [
+     1654.96,
+     668.1
+    ],
+    [
+     1797.01,
+     648.77
+    ],
+    [
+     1799.39,
+     648.78
+    ],
+    [
+     1799.4,
+     639.94
+    ],
+    [
+     1799.44,
+     603.39
+    ]
+   ],
+   "_note": "owner 2026-10-15 (on the satellite map: the east side lower)"
+  },
+  {
+   "id": "east-link",
+   "certain": true,
+   "oneway": true,
+   "kind": "entry",
+   "px": [
+    [
+     1664.22,
+     735.25
+    ],
+    [
+     1654.88,
+     744.42
+    ],
+    [
+     1640.09,
+     762.92
+    ]
+   ],
+   "_note": "owner 2026-10-15 (on the satellite map: the east side lower)"
+  },
+  {
+   "id": "se-shared",
+   "kind": "shared",
+   "certain": true,
+   "px": [
+    [
+     1648.01,
+     657.55
+    ],
+    [
+     1799.4,
+     639.94
+    ]
+   ],
+   "oneway": false,
+   "_note": "owner 2026-10-15 (on the satellite map: the east side lower)"
+  },
+  {
+   "id": "west-link",
+   "kind": "link",
+   "certain": true,
+   "px": [
+    [
+     714.26,
+     892.37
+    ],
+    [
+     761.95,
+     892.44
+    ],
+    [
+     836.95,
+     892.56
+    ],
+    [
+     868.69,
+     892.61
+    ]
+   ],
+   "oneway": true
+  },
+  {
+   "id": "exit-north",
+   "kind": "exit",
+   "certain": true,
+   "px": [
+    [
+     1626.0,
+     157.08
+    ],
+    [
+     1605.09,
+     156.92
+    ],
+    [
+     1504.97,
+     156.76
+    ],
+    [
+     1305.06,
+     156.45
+    ],
+    [
+     1104.99,
+     156.14
+    ],
+    [
+     904.92,
+     155.83
+    ],
+    [
+     804.97,
+     155.68
+    ],
+    [
+     715.03,
+     155.54
+    ],
+    [
+     605.06,
+     155.37
+    ],
+    [
+     506.98,
+     155.22
+    ]
+   ],
+   "oneway": true,
+   "_note": "owner 2026-10-15: starts at the P12 exit beside road 22, nothing east of it"
+  },
+  {
+   "id": "exit-link-810",
+   "kind": "exit",
+   "certain": true,
+   "px": [
+    [
+     810.06,
+     317.16
+    ],
+    [
+     810,
+     265
+    ],
+    [
+     810,
+     215
+    ],
+    [
+     809.55,
+     155.69
+    ]
+   ],
+   "oneway": true
+  },
+  {
+   "id": "exit-link-1561",
+   "kind": "exit",
+   "certain": true,
+   "px": [
+    [
+     1560.46,
+     318.32
+    ],
+    [
+     1561,
+     265
+    ],
+    [
+     1562,
+     215
+    ],
+    [
+     1563.51,
+     156.85
+    ]
+   ],
+   "oneway": true
+  },
+  {
+   "id": "exit-west",
+   "kind": "exit",
+   "certain": true,
+   "px": [
+    [
+     869.26,
+     344.45
+    ],
+    [
+     814.95,
+     344.36
+    ],
+    [
+     739.95,
+     344.25
+    ],
+    [
+     714.83,
+     344.21
+    ],
+    [
+     714.26,
+     892.37
+    ],
+    [
+     714.09,
+     1060.81
+    ]
+   ],
+   "oneway": true
+  },
+  {
+   "id": "exit-south-west",
+   "kind": "exit",
+   "certain": true,
+   "px": [
+    [
+     898.35,
+     921.55
+    ],
+    [
+     818.6,
+     921.43
+    ],
+    [
+     818.44,
+     1073.38
+    ]
+   ],
+   "oneway": true,
+   "_note": "owner 2026-10-15 (edited numbered map)"
+  },
+  {
+   "id": "sw-north",
+   "certain": true,
+   "oneway": true,
+   "kind": "entry",
+   "px": [
+    [
+     799.77,
+     1073.35
+    ],
+    [
+     799.78,
+     1060.95
+    ],
+    [
+     799.93,
+     921.4
+    ],
+    [
+     811.82,
+     907.82
+    ],
+    [
+     836.95,
+     892.56
+    ]
+   ],
+   "_note": "owner 2026-10-15 (edited numbered map)"
+  },
+  {
+   "id": "a-sw-west",
+   "certain": true,
+   "oneway": true,
+   "kind": "link",
+   "levels": [
+    "A"
+   ],
+   "px": [
+    [
+     818.45,
+     1060.97
+    ],
+    [
+     799.78,
+     1060.95
+    ]
+   ],
+   "_note": "owner 2026-10-15 (edited numbered map)"
+  },
+  {
+   "id": "nw-shared",
+   "kind": "shared",
+   "certain": true,
+   "px": [
+    [
+     715.03,
+     155.54
+    ],
+    [
+     714.98,
+     199.56
+    ]
+   ],
+   "oneway": false,
+   "levels": [
+    "B"
+   ]
+  },
+  {
+   "id": "ramp-down-B",
+   "kind": "ramp_down",
+   "certain": true,
+   "px": [
+    [
+     775.27,
+     155.63
+    ],
+    [
+     775.14,
+     285.66
+    ],
+    [
+     809.92,
+     285.72
+    ]
+   ],
+   "from_level": "A",
+   "to_level": "B",
+   "oneway": true,
+   "_note": "owner 2026-10-15 (edited numbered map)"
+  },
+  {
+   "id": "ramp-down-B-east",
+   "kind": "ramp_down",
+   "certain": true,
+   "oneway": true,
+   "from_level": "A",
+   "to_level": "B",
+   "px": [
+    [
+     1579.47,
+     318.35
+    ],
+    [
+     1579.55,
+     237.61
+    ],
+    [
+     1579.63,
+     156.88
+    ]
+   ],
+   "_note": "owner 2026-10-14"
+  },
+  {
+   "id": "nw-shared-2",
+   "kind": "shared",
+   "certain": true,
+   "px": [
+    [
+     785.45,
+     317.12
+    ],
+    [
+     784,
+     344.5
+    ]
+   ],
+   "oneway": false,
+   "levels": [
+    "B"
+   ]
+  },
+  {
+   "id": "ramp-up-A",
+   "kind": "ramp_up",
+   "certain": true,
+   "px": [
+    [
+     1596.43,
+     318.38
+    ],
+    [
+     1601,
+     256
+    ],
+    [
+     1600.0,
+     156.91
+    ]
+   ],
+   "from_level": "B",
+   "to_level": "A",
+   "oneway": true
+  },
+  {
+   "id": "ramp-up-A-nw",
+   "kind": "ramp_up",
+   "certain": true,
+   "oneway": true,
+   "from_level": "B",
+   "to_level": "A",
+   "_note": "owner 2026-10-14: from the exit road towards Sultana (between the red link and the green ramp), south beside the green ramp, up to the inner north road on A heading east",
+   "px": [
+    [
+     800.72,
+     155.67
+    ],
+    [
+     800.6,
+     236.4
+    ],
+    [
+     800.56,
+     317.15
+    ]
+   ]
+  },
+  {
+   "id": "a-nw-corner",
+   "kind": "link",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "A"
+   ],
+   "inferred": true,
+   "px": [
+    [
+     715.03,
+     155.54
+    ],
+    [
+     714.83,
+     344.21
+    ]
+   ],
+   "_note": "Level A only (owner, 2026-10-13): after the yellow ramp a car heads west on the north road; for the west, south and east lots it goes almost a full lap — down the west side (this corner), the west link into the loop, then clockwise. On B this corner is the orange opening and the Sultana entry road."
+  },
+  {
+   "id": "nw-straight",
+   "kind": "link",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "B"
+   ],
+   "px": [
+    [
+     714.86,
+     317.01
+    ],
+    [
+     714.83,
+     344.21
+    ]
+   ],
+   "_note": "Owner's correction 2026-10-13 (docs/routes/garage-nw-correction-2026-10-13.jpg): coming down from the Sultana entrance the road carries straight on south along the west side — no jog east and back through the orange opening."
+  },
+  {
+   "id": "exit-link-east",
+   "kind": "exit",
+   "certain": true,
+   "oneway": true,
+   "px": [
+    [
+     1617.99,
+     318.41
+    ],
+    [
+     1616.2,
+     242.8
+    ],
+    [
+     1614.42,
+     156.93
+    ]
+   ],
+   "_note": "owner 2026-10-14"
+  },
+  {
+   "id": "a-nw-opening",
+   "kind": "link",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "A"
+   ],
+   "_note": "owner 2026-10-14: on A, 6 m east of the NW yellow ramp, an opening south (like the orange one on B) to the west exit road, for the west and south lots",
+   "px": [
+    [
+     809.89,
+     317.16
+    ],
+    [
+     809.9,
+     344.5
+    ]
+   ]
+  },
+  {
+   "id": "omar-in",
+   "kind": "entry",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "B"
+   ],
+   "_note": "owner 2026-10-15 (edited numbered map)",
+   "px": [
+    [
+     484.06,
+     1155.28
+    ],
+    [
+     503.02,
+     1113.11
+    ],
+    [
+     511.28,
+     1103.48
+    ],
+    [
+     535.19,
+     1091.03
+    ],
+    [
+     577.33,
+     1077.85
+    ],
+    [
+     612.76,
+     1073.55
+    ],
+    [
+     722.46,
+     1073.15
+    ]
+   ]
+  },
+  {
+   "id": "exit-omar",
+   "kind": "exit",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "B"
+   ],
+   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "px": [
+    [
+     714.09,
+     1060.81
+    ],
+    [
+     705.96,
+     1060.83
+    ],
+    [
+     604.69,
+     1061.62
+    ],
+    [
+     567.89,
+     1068.18
+    ],
+    [
+     509.4,
+     1088.9
+    ],
+    [
+     497.88,
+     1097.59
+    ],
+    [
+     488.75,
+     1109.5
+    ],
+    [
+     470.14,
+     1148.82
+    ]
+   ]
+  },
+  {
+   "id": "sw-mid",
+   "kind": "exit",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "B"
+   ],
+   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "px": [
+    [
+     818.45,
+     1060.97
+    ],
+    [
+     714.09,
+     1060.81
+    ]
+   ]
+  },
+  {
+   "id": "ramp-up-A-sw",
+   "kind": "ramp_up",
+   "certain": true,
+   "oneway": true,
+   "from_level": "B",
+   "to_level": "A",
+   "_note": "owner 2026-10-15 (edited numbered map)",
+   "px": [
+    [
+     799.93,
+     921.4
+    ],
+    [
+     730.35,
+     921.29
+    ],
+    [
+     730.2,
+     1073.25
+    ],
+    [
+     745.47,
+     1073.27
+    ]
+   ]
+  },
+  {
+   "id": "ramp-down-B-sw",
+   "kind": "ramp_down",
+   "certain": true,
+   "oneway": true,
+   "from_level": "A",
+   "to_level": "B",
+   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "px": [
+    [
+     745.63,
+     921.31
+    ],
+    [
+     745.55,
+     992.7
+    ],
+    [
+     745.48,
+     1060.86
+    ]
+   ]
+  },
+  {
+   "id": "a-sw-to-green",
+   "kind": "link",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "A"
+   ],
+   "_note": "owner 2026-10-15 (edited numbered map)",
+   "px": [
+    [
+     799.93,
+     921.4
+    ],
+    [
+     745.63,
+     921.31
+    ]
+   ]
+  }
+ ],
+ "entrances": [
+  {
+   "id": "omar",
+   "lane": "omar-in",
+   "street": [
+    24.46572,
+    39.60657
+   ],
+   "_note": "OSM amenity=parking_entrance by Omar ibn al-Khattab street (in), owner 2026-10-14; the exit ramp portal is 9 m north-west of it"
+  },
+  {
+   "id": "sultana",
+   "lane": "sultana-in",
+   "street": [
+    24.470922,
+    39.607045
+   ],
+   "_note": "OSM amenity=parking_entrance on the Sultana side, reached from Al-Salam road (in); the exit ramp is 9 m north of it"
+  }
+ ],
+ "exits": [
+  {
+   "id": "omar",
+   "lane": "exit-omar",
+   "street": [
+    24.465754,
+    39.606489
+   ],
+   "departure": [
+    [
+     24.465754,
+     39.606489
+    ],
+    [
+     24.465582,
+     39.606381
+    ],
+    [
+     24.465508,
+     39.60627
+    ],
+    [
+     24.464695,
+     39.604735
+    ]
+   ]
+  },
+  {
+   "id": "sultana",
+   "lane": "exit-north",
+   "street": [
+    24.471006,
+    39.607046
+   ]
+  }
+ ],
+ "lots": [
+  {
+   "id": 908,
+   "entry_px": [
+    898,
+    345
+   ],
+   "exit_px": [
+    877,
+    197
+   ],
+   "side": "north",
+   "entry_lane": "north-lane",
+   "exit_lane": "exit-north",
+   "A": {
+    "entry_lane": "exit-north",
+    "entry_px": [
+     877,
+     197
+    ],
+    "exit_lane": "north-lane",
+    "exit_px": [
+     898,
+     345
+    ]
+   }
+  },
+  {
+   "id": 909,
+   "entry_px": [
+    1058,
+    348
+   ],
+   "exit_px": [
+    1076,
+    196
+   ],
+   "side": "north",
+   "entry_lane": "north-lane",
+   "exit_lane": "exit-north",
+   "A": {
+    "entry_lane": "exit-north",
+    "entry_px": [
+     1076,
+     196
+    ],
+    "exit_lane": "north-lane",
+    "exit_px": [
+     1058,
+     348
+    ]
+   }
+  },
+  {
+   "id": 910,
+   "entry_px": [
+    1222,
+    347
+   ],
+   "exit_px": [
+    1230,
+    195
+   ],
+   "side": "north",
+   "entry_lane": "north-lane",
+   "exit_lane": "exit-north",
+   "A": {
+    "entry_lane": "exit-north",
+    "entry_px": [
+     1230,
+     195
+    ],
+    "exit_lane": "north-lane",
+    "exit_px": [
+     1222,
+     347
+    ]
+   }
+  },
+  {
+   "id": 911,
+   "entry_px": [
+    1378,
+    342
+   ],
+   "exit_px": [
+    1393,
+    193
+   ],
+   "side": "north",
+   "entry_lane": "north-lane",
+   "exit_lane": "exit-north",
+   "A": {
+    "entry_lane": "exit-north",
+    "entry_px": [
+     1393,
+     193
+    ],
+    "exit_lane": "north-lane",
+    "exit_px": [
+     1378,
+     342
+    ]
+   }
+  },
+  {
+   "id": 912,
+   "entry_px": [
+    1618.0,
+    319.9
+   ],
+   "exit_px": [
+    1630.0,
+    169.8
+   ],
+   "side": "east",
+   "entry_lane": "north-lane",
+   "exit_lane": "exit-north"
+  },
+  {
+   "id": 913,
+   "entry_px": [
+    1799.44,
+    599.99
+   ],
+   "exit_px": [
+    1648.07,
+    599.76
+   ],
+   "side": "east",
+   "entry_lane": "p13-in",
+   "exit_lane": "p13-exit"
+  },
+  {
+   "id": 901,
+   "entry_px": [
+    1476,
+    918
+   ],
+   "exit_px": [
+    1472,
+    1062
+   ],
+   "side": "south",
+   "entry_lane": "south-lane",
+   "exit_lane": "outer-south"
+  },
+  {
+   "id": 902,
+   "entry_px": [
+    1322,
+    918
+   ],
+   "exit_px": [
+    1318,
+    1065
+   ],
+   "side": "south",
+   "entry_lane": "south-lane",
+   "exit_lane": "outer-south"
+  },
+  {
+   "id": 903,
+   "entry_px": [
+    1161,
+    906
+   ],
+   "exit_px": [
+    1154,
+    1064
+   ],
+   "side": "south",
+   "entry_lane": "south-lane",
+   "exit_lane": "outer-south"
+  },
+  {
+   "id": 904,
+   "entry_px": [
+    976,
+    908
+   ],
+   "exit_px": [
+    961,
+    1061
+   ],
+   "side": "south",
+   "entry_lane": "south-lane",
+   "exit_lane": "outer-south"
+  },
+  {
+   "id": 905,
+   "entry_px": [
+    887,
+    836
+   ],
+   "exit_px": [
+    743,
+    830
+   ],
+   "side": "west",
+   "entry_lane": "west-lane",
+   "exit_lane": "exit-west"
+  },
+  {
+   "id": 906,
+   "entry_px": [
+    887,
+    678
+   ],
+   "exit_px": [
+    755,
+    658
+   ],
+   "side": "west",
+   "entry_lane": "west-lane",
+   "exit_lane": "exit-west"
+  },
+  {
+   "id": 907,
+   "entry_px": [
+    887,
+    517
+   ],
+   "exit_px": [
+    743,
+    495
+   ],
+   "side": "west",
+   "entry_lane": "west-lane",
+   "exit_lane": "exit-west"
+  }
+ ],
+ "lots_note": "entry_lane: the road the blue arrow turns off; exit_lane: the road the dark red arrow joins (south lots leave onto the bottom road, driven westwards on the right, then the red link at x≈808 px to the west exit).",
+ "extra_drawings": [
+  "docs/routes/garage-sultana-2026-10-13.json"
+ ],
+ "rules_ar": {
+  "oneway": "كل طريق باتجاه واحد، بترتيب نقاطه (بطلب المالك 2026-10-13). «جميع الطرق يمين»: الحركة تدور يميناً، أي مع عقارب الساعة.",
+  "levels": "الطرق نفسها في الدورين: B السفلي وA العلوي. الدخول والخروج الرئيسيان من B فقط. الصعود إلى A بالأصفر بعد موقف 11، والنزول إلى B بالأخضر بين المرفقين 220 و222.",
+  "south_exit": "المواقف الجنوبية تخرج إلى الطريق السفلي وتكمل شرقاً، ثم شمالاً إلى الخروج الأحمر في الجهة الشرقية.",
+  "west_link": "الوصلة الزرقاء عند y≈894: من طريق الخروج الغربي إلى الحلقة، بدل الذهاب إلى المواقف الجنوبية وأخذ لفة كاملة (بقول المالك).",
+  "shared": "البرتقالي في الدور B فقط: فتحة بين مسار الدخول ومسار الخروج لمن غيّر رأيه، تُعبر في الاتجاهين (بتصحيح المالك 2026-10-13).",
+  "level_A": "الدور A (بقول المالك): بعد الطلعة الصفراء تتجه السيارة غرباً على الطريق الشمالي، ومنه تدخل المواقف الشمالية (عكس B)، وتخرج منها إلى الطريق الشمالي الداخلي. المواقف الغربية والجنوبية والشرقية كما في B، فيلزم ما يقارب دورة كاملة: نزولاً من الركن الشمالي الغربي إلى الطريق الغربي، ثم الوصلة إلى الحلقة."
+ },
+ "corrections": [
+  {
+   "date": "2026-10-13",
+   "image": "garage-east-correction-2026-10-13.jpg",
+   "what_ar": "الطرق قريبة من المرافق لا من المسجد: الطريق الشرقي بجانب المرافق الشرقية، والطريق الجنوبي أُزيح 8 م جنوباً بجانب المرافق الجنوبية."
+  },
+  {
+   "date": "2026-10-13",
+   "image": "garage-nw-correction-2026-10-13.jpg",
+   "what_ar": "في الركن الشمالي الغربي الطريق متصل: النازل من مدخل سلطانة يكمل جنوباً مباشرة دون انعطاف شرقاً ثم غرباً."
+  }
+ ]
+}

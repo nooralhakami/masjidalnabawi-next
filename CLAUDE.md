@@ -16,13 +16,18 @@
 - **لا PR إلا بطلب صريح.** ولا نشر على Vercel إلا بعد «انشر»، في مشروع جديد منفصل.
 - **ملفات لا تُعدَّل:** `data/`، والملفات المنقولة حرفياً (`src/{data,domain,routing,location,i18n}`)، ومنطق `src/presentation` و`src/navigation`. `parity.test.ts` يكشف أي انحراف.
 
-## الأوامر (تُثبَّت في المرحلة 1)
+## الأوامر
 - `npm ci`
 - `npm run dev` (http://localhost:5173/map.html)
-- `npm test`
-- `npm run test:e2e`
+- `npm test` (نحو دقيقتين: اختبارات الشوارع ثقيلة)
 - `npm run build`
-- `npm run perf`
+- `npm run test:e2e` تُضاف في المرحلة 4، و`npm run perf` في المرحلة 3.
+
+**ملاحظات البيئة:**
+- **npm:** `npm install` من الصفر يتعثر في npm 10.9.4 بخطأ `edgesOut`، فملف القفل بُدئ من ملف التطبيق الحالي. لا تحذف `package-lock.json`.
+- **Playwright:** 1.63 يتوقع Chromium رقم 1243، والمثبّت في الحاوية 1194. فمرّر `executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'` ولا تشغّل `playwright install`.
+- **MapLibre:** الإصدار 6 بلا export افتراضي (`import { Map } from 'maplibre-gl'`)، والعامل يُجمع بـ`?worker&url` (ARCHITECTURE §5).
+- **الخادم المحلي:** إن كتبت خادماً بنفسك فأرسل ملفات `.mjs` بنوع `text/javascript`، وإلا رُفض عامل الخريطة.
 
 ## تعريف الإنجاز
 1. **الاختبارات:** اختبارات الوحدة وe2e والبناء ناجحة. الصق سطور الخلاصة.

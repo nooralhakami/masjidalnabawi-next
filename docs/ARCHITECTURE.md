@@ -114,9 +114,8 @@ tests/unit/  tests/e2e/  scripts/perf.mjs
 - **Base layers.** Raster Esri (`tileSize: 256`, `maxzoom` 19 in tile terms) and OSM light.
   - Attribution is always visible: «Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics» + «© OpenStreetMap».
   - The first tiles are preloaded in `map.html` before JS, as in the live app, recomputed for MapLibre's scale.
-- **Labels.** No external glyph server. Two options are decided in the Phase 1 spike (SPEC §9-5):
-  - MapLibre's local text rendering, or
-  - canvas sprites drawn with the app's own fonts (correct Arabic shaping by the browser).
+- **Labels.** No external glyph server. MapLibre 6 symbol layers draw text from the page's own fonts (TinySDF) and shape Arabic and bidirectional text itself (Phase 1 spike). Canvas sprites remain the fallback if one language misrenders.
+- **Worker.** MapLibre 6 runs its worker from a separate module: `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'` + `setWorkerUrl(workerUrl)`, so Vite bundles it with its shared chunk. Version 6 has no default export: import by name.
 - **Rotation.** Two-finger rotate and the ±15° buttons.
   - The compass needle follows true north, with the Kaaba mark toward the qibla.
   - Pitch is locked to 0 (SPEC §9-6).
@@ -137,8 +136,8 @@ tests/unit/  tests/e2e/  scripts/perf.mjs
 ## 6. Dependencies (each with its reason; sizes are measured in Phase 1)
 | Package | Why | Status |
 |---|---|---|
-| `maplibre-gl` | WebGL map: markers on the GPU instead of ~300 DOM nodes | **new — needs approval** (version: SPEC §9-5) |
-| `preact` + `@preact/signals` | component UI with fine-grained updates, a few KB | **new — needs approval** (SPEC §9-4) |
+| `maplibre-gl` 6.11.0 | WebGL map: markers on the GPU instead of ~300 DOM nodes; shapes Arabic itself (no glyph server) | approved 2026-10-16 · ≈ 285 KB + worker ≈ 143 KB gzip (`docs/spikes/2026-10-16-maplibre.md`) |
+| `preact` 10.29.8 + `@preact/signals` 2.11.3 | component UI with fine-grained updates | approved 2026-10-16 · ≈ 8.7 KB gzip together |
 | `vite`, `typescript`, `tailwindcss` + `@tailwindcss/vite`, `vite-plugin-pwa`, `workbox-window`, `vitest`, `@playwright/test` | build, styling, PWA, tests | as in the live app |
 | `adhan`, `qrcode-generator`, `@fontsource/{noto-kufi-arabic, ibm-plex-sans-arabic, noto-naskh-arabic}` | Rawdah times, QR, fonts | as in the live app |
 | ~~`leaflet`, `leaflet-rotate`, `@types/leaflet`~~ | — | removed |

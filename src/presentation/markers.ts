@@ -1,0 +1,181 @@
+import type { Poi, Status } from '../data/types';
+import type { FilterId } from '../domain/filters';
+import { isClosed } from '../domain/facilities';
+import { icon, type IconName } from './icons';
+
+/** Zoom tiers drive marker size and progressive disclosure. */
+export type Tier = 's' | 'm' | 'l';
+export const tierOf = (zoom: number): Tier => (zoom <= 16 ? 's' : zoom < 19 ? 'm' : 'l');
+
+/** The number between the two markers of a pair: from zoom 18, when the markers are far enough apart to leave room. */
+export const pairLabelVisible = (zoom: number): boolean => zoom >= 18;
+
+/** Its look: the colour of the pair's restrooms (men blue, women purple, mixed purple). */
+export function pairLabelSpec(a: Poi): { html: string; className: string; size: [number, number] } {
+  const c = a.gender === 'men' ? 'var(--cat-men)' : 'var(--cat-women)';
+  return { html: `<span class="pair-no" style="--c:${c}">${a.pairNo}</span>`, className: 'pair-no-wrap', size: [44, 22] };
+}
+
+export const gateLabelVisible = (p: Poi, zoom: number): boolean => p.subCategory === 'gate_inner' && zoom >= 19 && p.name_ar !== `باب رقم ${p.id}`;
+
+/** Facility marker diameter per tier: ≤16 → 8px (a plain dot), 17 → 14px, ≥18 → 20px (with icon). */
+export const FACILITY_SIZE: Record<Tier, number> = { s: 8, m: 14, l: 20 };
+
+/**
+ * Zoomed out, every marker stays where it is but shrinks (owner: no merging into one marker):
+ * the map container gets a zoom class and CSS sizes the dots — 4px at 14 and below, 5px at 15.
+ */
+export const zoomClass = (zoom: number): string => (zoom <= 14 ? 'z-far' : zoom <= 15 ? 'z-mid' : '');
+
+/** Transparent hit area around every marker. */
+export const HIT = 32;
+
+const DIR_VAR = { south: 'var(--dir-south)', west: 'var(--dir-west)', north: 'var(--dir-north)', east: 'var(--dir-east)' } as const;
+
+interface Look {
+  icon: IconName;
+  color: string;
+}
+
+export function lookOf(p: Poi): Look {
+  switch (p.subCategory) {
+    case 'toilet_men':
+      return { icon: 'men', color: 'var(--cat-men)' };
+    case 'toilet_women':
+      return { icon: 'women', color: 'var(--cat-women)' };
+    case 'toilet_mixed':
+      return { icon: 'mixed', color: 'mixed' };
+    case 'toilet_elderly':
+      return { icon: 'elevator', color: 'var(--cat-acc)' };
+    case 'toilet_accessible':
+      return { icon: 'accessible', color: 'var(--cat-acc)' };
+    case 'wheelchair_zone':
+      return { icon: 'cart', color: 'var(--cat-acc)' };
+    case 'hotel':
+      return { icon: 'hotel', color: 'var(--cat-hotel)' };
+    case 'food':
+      return { icon: 'food', color: 'var(--cat-food)' };
+    case 'mall':
+    case 'hypermarket':
+    case 'market':
+      return { icon: 'bag', color: 'var(--cat-shop)' };
+    case 'women_service':
+      return { icon: 'prayer', color: 'var(--cat-women)' };
+    case 'parking':
+      return { icon: 'parking', color: 'var(--cat-men)' };
+    case 'gate_outer':
+    case 'gate_inner':
+      return { icon: 'gate', color: DIR_VAR[p.direction] };
+    case 'historic':
+      return { icon: 'historic', color: 'var(--cat-hist)' };
+    // Key services: one colour, an icon for each kind of help.
+    case 'health':
+      return { icon: 'emergency', color: 'var(--cat-emg)' };
+    case 'police':
+      return { icon: 'police', color: 'var(--cat-emg)' };
+    case 'lost_children':
+    case 'child_care':
+      return { icon: 'child', color: 'var(--cat-emg)' };
+    case 'lost_found':
+      return { icon: 'lostfound', color: 'var(--cat-emg)' };
+    case 'service':
+      return { icon: 'info', color: 'var(--cat-emg)' };
+    default:
+      return p.category === 'emergency' ? { icon: 'emergency', color: 'var(--cat-emg)' } : { icon: 'landmark', color: 'var(--cat-land)' };
+  }
+}
+
+/**
+ * Progressive disclosure: zoomed out (≤16) shows only outer gates and facilities;
+ * inner gates and wheelchair zones appear from 17. A specific filter pill shows its POIs at any zoom.
+ */
+export function visibleAtZoom(p: Poi, tier: Tier, filter: FilterId, selected: boolean): boolean {
+  if (selected || tier !== 's' || filter !== 'all') return true;
+  return p.subCategory !== 'gate_inner' && p.subCategory !== 'wheelchair_zone';
+}
+
+export interface MarkerSpec {
+  html: string;
+  className: string;
+  zIndex: number;
+  /** Icon box size and anchor; defaults to the 32px hit area centred on the point. */
+  size?: [number, number];
+  anchor?: [number, number];
+}
+
+/** Selected facility pin: 48×60 box whose tip sits on the point. */
+export const PIN_SIZE: [number, number] = [48, 60];
+export const PIN_ANCHOR: [number, number] = [24, 57];
+
+/** Approximate on-screen size of an outer-gate chip, for decluttering. */
+export function chipSize(p: Poi, tier: Tier): [number, number] {
+  const digits = String(p.id).length;
+  const lock = p.category === 'parking' && p.access === 'subscribers' ? 14 : 0;
+  return tier === 'm' ? [digits * 6.2 + 22 + lock, 17] : [digits * 7 + 24 + lock, 19];
+}
+
+/** Axis-aligned overlap test for screen boxes centred on points. */
+export function overlaps(a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }, gap = 2): boolean {
+  return Math.abs(a.x - b.x) * 2 < a.w + b.w + gap * 2 && Math.abs(a.y - b.y) * 2 < a.h + b.h + gap * 2;
+}
+
+/**
+ * Marker HTML for a POI at a zoom tier. Pure — no Leaflet.
+ * `compact` draws an outer gate as a dot even when zoomed in (its chip would overlap another).
+ * `featured` (a must-visit site) draws a glowing badge that keeps its size at every zoom.
+ */
+export function markerSpec(p: Poi, tier: Tier, status: Status | undefined, selected: boolean, compact = false, featured = false): MarkerSpec {
+  const look = lookOf(p);
+  const closed = isClosed(status);
+  const cls = ['mk', `mk-${tier}`];
+  if (selected) cls.push('is-selected');
+  if (closed) cls.push('is-closed');
+  let inner: string;
+  let z = 0;
+
+  if (p.subCategory === 'gate_outer') {
+    // Number chip edged in the side colour; a 6px dot when zoomed out.
+    inner =
+      (tier === 's' || compact) && !selected
+        ? `<span class="mk-gdot" style="--c:${look.color}"></span>`
+        : `<span class="mk-chip" style="--c:${look.color}">${p.id}</span>`;
+    z = 100;
+  } else if (p.subCategory === 'gate_inner') {
+    const c = p.women ? 'var(--cat-women)' : look.color;
+    inner =
+      tier === 'l' || selected
+        ? `<span class="mk-inum" style="--c:${c}">${p.id}</span>`
+        : `<span class="mk-gdot mk-gdot-in" style="--c:${c}"></span>`;
+    z = 50;
+  } else if (p.category === 'parking') {
+    const subscriber = p.access === 'subscribers';
+    const title = subscriber ? 'Subscribers only' : 'Open to all';
+    inner = `<span class="mk-park-wrap${subscriber ? ' is-sub' : ''}" title="${title}" aria-label="${title}"><span class="mk-park" dir="ltr"><span class="p-l">P</span><span>${p.id - 900}</span></span>${subscriber ? `<span class="mk-park-lock" aria-hidden="true">${icon('lock', 10)}</span>` : ''}</span>`;
+    z = 200;
+  } else if (featured && !selected) {
+    cls.push('mk-feat');
+    inner = `<span class="mk-star-wrap"><span class="mk-halo" aria-hidden="true"></span><span class="mk-star">${icon(look.icon, 24)}</span></span>`;
+    z = 400;
+  } else {
+    const d = FACILITY_SIZE[tier];
+    const bg = closed ? 'var(--cat-gray)' : look.color;
+    const isMixed = bg === 'mixed';
+    const mixed = isMixed ? ' mk-mixed' : '';
+    // The glow needs a real colour: mixed restrooms glow purple.
+    const c = isMixed ? 'var(--cat-women)' : bg;
+    if (selected) {
+      cls.push('mk-pinwrap');
+      return {
+        html: `<span class="mk-pin${mixed}" style="--c:${c}">${icon(look.icon, 24)}</span>`,
+        className: cls.join(' '),
+        zIndex: 1000,
+        size: PIN_SIZE,
+        anchor: PIN_ANCHOR,
+      };
+    }
+    const glyph = d >= 13 ? icon(look.icon, 24) : '';
+    inner = `<span class="mk-dot${mixed}" style="--d:${d}px;--c:${c}">${glyph}</span>`;
+    z = 300;
+  }
+  return { html: inner, className: cls.join(' '), zIndex: selected ? 1000 : z };
+}
