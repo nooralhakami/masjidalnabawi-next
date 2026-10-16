@@ -2,11 +2,13 @@ import type { ComponentChildren, Ref } from 'preact';
 import type { JSX } from 'preact';
 import { Icon } from '../kit/Icon';
 import { IconButton } from '../kit/Button';
+import { tNext } from '../../i18n-next/strings';
 import { useI18n } from '../i18n';
 
 /**
  * The floating search bar at the top of the map: the search field (with clear) and the app's own
- * buttons — the theme, sharing the app, and (phase 6) the language. Room under it for the panel.
+ * buttons — the theme, sun mode (high contrast, owner 2026-10-16), sharing the app, and the language.
+ * Room under it for the panel.
  */
 export function SearchBar({
   value,
@@ -16,6 +18,8 @@ export function SearchBar({
   onLang,
   dark,
   onTheme,
+  contrast = false,
+  onContrast,
   onShare,
   expanded = false,
   inputRef,
@@ -30,6 +34,9 @@ export function SearchBar({
   onLang?(): void;
   dark: boolean;
   onTheme(): void;
+  /** Sun mode: stronger text and lines for bright sunlight. */
+  contrast?: boolean;
+  onContrast?(): void;
   onShare?(): void;
   expanded?: boolean;
   inputRef?: Ref<HTMLInputElement>;
@@ -67,6 +74,15 @@ export function SearchBar({
           </button>
         ) : null}
         <IconButton icon={dark ? 'sun' : 'moon'} label={t(dark ? 'theme_day' : 'theme_night')} pressed={dark} class="theme-btn" onClick={onTheme} />
+        {onContrast ? (
+          <button type="button" class="icon-btn contrast-btn" aria-label={tNext('contrast_more')} title={tNext('contrast_more')} aria-pressed={contrast} onClick={onContrast}>
+            {/* The usual contrast sign: a circle half filled. */}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="8.5" />
+              <path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none" />
+            </svg>
+          </button>
+        ) : null}
         {onShare ? <IconButton icon="share" label={t('share_app')} onClick={onShare} /> : null}
       </div>
       {children}

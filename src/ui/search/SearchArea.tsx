@@ -19,6 +19,8 @@ export interface SearchAreaProps {
   onPick(p: Poi): void;
   dark: boolean;
   onTheme(): void;
+  contrast?: boolean;
+  onContrast?(): void;
   onShare(): void;
   /** The language button (its short name) and what it opens. */
   langShort?: string;
@@ -31,7 +33,7 @@ export interface SearchAreaProps {
  * Back in a box with words already in it, the results show again without typing (owner,
  * 2026-10-14). With an empty box, the recent searches (this device only).
  */
-export function SearchArea({ rank, status, onPick, dark, onTheme, onShare, langShort, onLang }: SearchAreaProps) {
+export function SearchArea({ rank, status, onPick, dark, onTheme, contrast, onContrast, onShare, langShort, onLang }: SearchAreaProps) {
   const { t, nm, dirName } = useI18n();
   const input = useRef<HTMLInputElement>(null);
   const timer = useRef(0);
@@ -109,6 +111,8 @@ export function SearchArea({ rank, status, onPick, dark, onTheme, onShare, langS
       }}
       dark={dark}
       onTheme={onTheme}
+      contrast={contrast}
+      onContrast={onContrast}
       onShare={onShare}
       langShort={langShort}
       onLang={onLang}

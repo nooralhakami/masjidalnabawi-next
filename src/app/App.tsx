@@ -27,7 +27,7 @@ import { BottomSheet } from '../ui/sheet/BottomSheet';
 import { PlaceCard } from '../ui/sheet/PlaceCard';
 import { detentHeights } from '../ui/sheet/physics';
 import { CategoryRow } from '../ui/shell/CategoryRow';
-import { applyTheme, currentTheme } from '../ui/theme';
+import { applyContrast, applyTheme, currentTheme } from '../ui/theme';
 
 /** Extra height of the half-open card for its walking/car row, and the level row by car (as the live app). */
 const extraFor = (tr: 'walk' | 'drive') => (tr === 'drive' ? 120 : 64);
@@ -66,6 +66,7 @@ function useLazy<T>(load: () => Promise<T>): [T | null, () => Promise<T>] {
 export function App({ engine, fac, initial, trip, initialVisit, initialLib, admin }: AppProps) {
   const lang = getLang();
   const dark = useSignal(currentTheme() === 'dark');
+  const contrast = useSignal(document.documentElement.dataset.contrast === 'more');
   const top = useRef<HTMLDivElement>(null);
 
   // How many places each pill shows (the live app's counts), and what the chosen pill shows now.
@@ -206,6 +207,12 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
             const next = currentTheme() === 'dark' ? 'light' : 'dark';
             applyTheme(next);
             dark.value = next === 'dark';
+            engine.restyle();
+          }}
+          contrast={contrast.value}
+          onContrast={() => {
+            applyContrast(!contrast.value);
+            contrast.value = !contrast.value;
             engine.restyle();
           }}
           onShare={() => void share(new URL('./', location.href).href, t('title'), t('app_link_copied'))}

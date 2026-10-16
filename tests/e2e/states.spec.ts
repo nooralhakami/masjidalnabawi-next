@@ -74,4 +74,39 @@ test.describe('sun mode (high contrast)', () => {
     const v = await tokens(page);
     expect(v.muted).not.toBe(v.ink);
   });
+
+  test('the button in the search bar turns it on and off, and the choice is remembered', async ({ page, errors: _ }) => {
+    await openMap(page, 'ar');
+    const btn = page.getByRole('button', { name: 'وضع الشمس: تباين أعلى' });
+    await expect(btn).toHaveAttribute('aria-pressed', 'false');
+    await btn.click();
+    await expect(page.locator('html')).toHaveAttribute('data-contrast', 'more');
+    await expect(btn).toHaveAttribute('aria-pressed', 'true');
+    expect(await page.evaluate(() => localStorage.getItem('contrast'))).toBe('more');
+    let v = await tokens(page);
+    expect(v.muted).toBe(v.ink);
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-contrast', 'more');
+    await page.getByRole('button', { name: 'وضع الشمس: تباين أعلى' }).click();
+    await expect(page.locator('html')).not.toHaveAttribute('data-contrast', 'more');
+    v = await tokens(page);
+    expect(v.muted).not.toBe(v.ink);
+  });
+
+  test('the search bar still fits at 320 px with the extra button', async ({ page, errors: _ }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    for (const lang of ['ar', 'en'] as const) {
+      await openMap(page, lang);
+      const r = await page.evaluate(() => {
+        const bar = document.querySelector('.search-bar')!.getBoundingClientRect();
+        const field = document.querySelector('.search-field')!.getBoundingClientRect();
+        const btns = [...document.querySelectorAll('.search-bar > button')].map((b) => b.getBoundingClientRect());
+        return { right: bar.right, left: bar.left, field: field.width, inside: btns.every((b) => b.left >= bar.left - 0.5 && b.right <= bar.right + 0.5 && b.width >= 44 && b.height >= 44) };
+      });
+      expect(r.left).toBeGreaterThanOrEqual(0);
+      expect(r.right).toBeLessThanOrEqual(320);
+      expect(r.inside).toBe(true);
+      expect(r.field).toBeGreaterThanOrEqual(88);
+    }
+  });
 });

@@ -408,6 +408,21 @@
   font-weight: 600;
   font-size: var(--fs-sm);
 }
+/* The narrowest phones: five buttons share the bar with the field, so the language button keeps
+   only its short name (the globe is in its label) and the field starts closer to the edge. */
+@media (max-width: 359px) {
+  .search-bar {
+    padding-inline-start: var(--s-2);
+  }
+  .lang-btn {
+    min-width: var(--hit);
+    justify-content: center;
+    padding-inline: 4px;
+  }
+  .lang-btn .ic {
+    display: none;
+  }
+}
 .search-panel {
   /* Room for the 8 results of a search on a phone (the live app shows them all), the top bar above. */
   max-height: calc(100dvh - 96px);
