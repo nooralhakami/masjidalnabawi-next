@@ -109,3 +109,27 @@ test.describe('markers pop in on a new filter (SPEC §5)', () => {
     expect((await opacity(page)).icon).toBeUndefined();
   });
 });
+
+test('a chosen gate: its number 1.35 times larger, with its name beside it from 19 (the live app)', async ({ page, errors: _ }) => {
+  await openMap(page, 'ar', '?poi=37');
+  await expect(page.locator('.pc-title')).toContainText('37', { timeout: 15_000 });
+  await page.evaluate(() => (window as unknown as Win).__engine.map.jumpTo({ zoom: 18.2 }));
+  const r = await page.evaluate(
+    () =>
+      new Promise<{ sel: string[]; names: string[]; size: unknown }>((done) => {
+        const m = (window as unknown as Win).__engine.map;
+        m.once('idle', () =>
+          done({
+            sel: m.queryRenderedFeatures({ layers: ['selected'] }).map((f: any) => String(f.properties.id)),
+            names: m.queryRenderedFeatures({ layers: ['gate-names'] }).map((f: any) => String(f.properties.id)),
+            size: m.getLayoutProperty('selected', 'icon-size'),
+          }),
+        );
+        m.triggerRepaint();
+      }),
+  );
+  expect(r.sel).toEqual(['37']);
+  expect(r.names).toEqual(['37']);
+  expect(JSON.stringify(r.size)).toContain('1.35');
+});
+

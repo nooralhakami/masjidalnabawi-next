@@ -87,8 +87,12 @@ async function main() {
     const r = open.value ? 0 : rawdahH.value;
     requestAnimationFrame(() => {
       const bar = document.querySelector<HTMLElement>('.nav-bar')?.offsetHeight ?? 64;
-      const bottom = on ? `${h + bar + 24}px` : r ? `${r + 28}px` : '';
+      // Room under the buttons for the scale bar (as the default 64px leaves).
+      const bottom = on ? `${h + bar + 46}px` : r ? `${r + 50}px` : '';
       for (const id of ['overlay', 'overlay-left']) document.getElementById(id)!.style.bottom = bottom;
+      // The scale bar too (above the imagery credit, which stays at the very bottom, always visible).
+      const scale = document.querySelector<HTMLElement>('.maplibregl-ctrl-scale');
+      if (scale) scale.style.marginBottom = on ? `${h + bar}px` : r ? `${r + 4}px` : '';
     });
   });
   fac.onChange(() => engine.refreshStatus());

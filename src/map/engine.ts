@@ -318,6 +318,8 @@ export class MapEngine {
           this.img('pin:', ['get', 'look'], ':', ['to-string', ['get', 'closed']]),
         ] as unknown as ExpressionSpecification,
         'icon-anchor': ['match', ['get', 'kind'], ['gate-outer', 'gate-inner', 'parking'], 'center', 'bottom'] as unknown as ExpressionSpecification,
+        // A chosen gate or car park: its own chip, 1.35 times larger (the live app's .mk.is-selected).
+        'icon-size': ['match', ['get', 'kind'], ['gate-outer', 'gate-inner', 'parking'], SELECTED_SCALE, 1] as unknown as ExpressionSpecification,
       },
     });
     // Must-visit sites on top: same size at every zoom (30 px at 19), with their halo.
@@ -439,7 +441,10 @@ export class MapEngine {
     set('outer-dots', kind('gate-outer'));
     set('outer-chips', kind('gate-outer'));
     set('inner-numbers', kind('gate-inner'));
-    set('gate-names', ['all', kind('gate-inner'), ['==', ['get', 'named'], 1]] as ExpressionSpecification);
+    const named = ['all', kind('gate-inner'), ['==', ['get', 'named'], 1]] as ExpressionSpecification;
+    // The chosen gate keeps its name beside it (from 19, as the live app), even with «hide markers».
+    if (this.selected !== null) this.map.setFilter('gate-names', ['all', named, ['==', ['get', 'id'], this.selected]] as FilterSpecification);
+    else set('gate-names', named);
     set('parking', kind('parking'));
     const facility = ['any', kind('facility'), ['all', kind('featured'), ['!', featuredDrawn]]] as ExpressionSpecification;
     const mixed = ['==', ['get', 'pcolor'], 'mixed'] as ExpressionSpecification;
@@ -586,3 +591,4 @@ const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** The markers that pop in on a new filter (the nine must-visit sites and the open card's pin stay). */
 const POP_LAYERS = ['inner-dots', 'outer-dots', 'facility-dots', 'mixed-dots', 'facilities', 'parking', 'outer-chips', 'inner-numbers', 'pairs', 'gate-names'];
 const POP_MS = 200;
+const SELECTED_SCALE = 1.35;
