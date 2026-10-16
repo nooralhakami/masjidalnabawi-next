@@ -33,7 +33,8 @@ export interface MapEngineOptions {
   /** Name of a place in the visitor's language (gate labels). */
   nameOf(p: Poi): string;
   status(id: number): Status | undefined;
-  onPick?(id: number): void;
+  /** A tap on the map: the place under it, or null for empty map. */
+  onPick?(id: number | null): void;
   attribution?: { satellite: string; osm: string };
 }
 
@@ -53,6 +54,8 @@ export class MapEngine {
   readonly map: MLMap;
   private version = 1;
   private view: PoiView = { ids: [], filter: 'all', withFeatured: true, hidden: false };
+  /** The place whose card is open: drawn as a pin; every other place is hidden meanwhile (as the live app). */
+  private selected: number | null = null;
   private touched = false;
   private base: BaseLayer = 'satellite';
   private palette = cssPalette();
@@ -283,6 +286,29 @@ export class MapEngine {
       minzoom: at(GATE_NAME_FROM),
       layout: { 'icon-image': this.img('name:', ['to-string', ['get', 'id']]), 'icon-anchor': 'left', 'icon-offset': [26, 0], 'icon-padding': 2, 'symbol-sort-key': ['get', 'id'] },
     });
+    // The chosen place: a pin for a facility or site (48 × 60, its tip on the spot), the chip or
+    // number of a gate or car park — at any zoom, and even with «hide markers» on.
+    m.addLayer({
+      id: 'selected',
+      type: 'symbol',
+      source: 'pois',
+      filter: ['literal', false],
+      layout: {
+        ...symbol,
+        'icon-image': [
+          'match',
+          ['get', 'kind'],
+          'gate-outer',
+          this.img('gate:', ['to-string', ['get', 'id']]),
+          'gate-inner',
+          this.img('inum:', ['to-string', ['get', 'id']], ':', ['get', 'color']),
+          'parking',
+          this.img('park:', ['to-string', ['get', 'n']], ':', ['to-string', ['get', 'sub']]),
+          this.img('pin:', ['get', 'look'], ':', ['to-string', ['get', 'closed']]),
+        ] as unknown as ExpressionSpecification,
+        'icon-anchor': ['match', ['get', 'kind'], ['gate-outer', 'gate-inner', 'parking'], 'center', 'bottom'] as unknown as ExpressionSpecification,
+      },
+    });
     // Must-visit sites on top: same size at every zoom (30 px at 19), with their halo.
     m.addLayer({
       id: 'featured',
@@ -360,7 +386,10 @@ export class MapEngine {
     const shown = ['in', ['get', 'id'], ['literal', [...ids, ...(withFeatured ? [...FEATURED_IDS] : [])]]] as unknown as ExpressionSpecification;
     const kind = (k: string) => ['==', ['get', 'kind'], k] as ExpressionSpecification;
     const featuredDrawn = (withFeatured ? ['==', ['get', 'featured'], 1] : ['literal', false]) as ExpressionSpecification;
-    const set = (layer: string, f: ExpressionSpecification) => this.map.setFilter(layer, (hidden ? ['literal', false] : ['all', shown, f]) as FilterSpecification);
+    // With a card open only its place shows (the live app); «hide markers» hides the rest too.
+    const off = hidden || this.selected !== null;
+    const set = (layer: string, f: ExpressionSpecification) => this.map.setFilter(layer, (off ? ['literal', false] : ['all', shown, f]) as FilterSpecification);
+    this.map.setFilter('selected', (this.selected === null ? ['literal', false] : ['==', ['get', 'id'], this.selected]) as FilterSpecification);
     set('inner-dots', kind('gate-inner'));
     set('outer-dots', kind('gate-outer'));
     set('outer-chips', kind('gate-outer'));
@@ -375,9 +404,34 @@ export class MapEngine {
     set('featured', ['all', kind('featured'), featuredDrawn] as ExpressionSpecification);
     // The number between a pair's two markers, only while both are on the map.
     const both = ['all', ['in', ['get', 'id'], ['literal', [...ids]]], ['in', ['get', 'b'], ['literal', [...ids]]]] as unknown as ExpressionSpecification;
-    this.map.setFilter('pairs', (hidden ? ['literal', false] : both) as FilterSpecification);
+    this.map.setFilter('pairs', (off ? ['literal', false] : both) as FilterSpecification);
     // Zoomed out (≤ 16) with «All», inner gates wait until 17; a gates filter shows them at any zoom (visibleAtZoom).
     this.map.setLayerZoomRange('inner-dots', filter === 'all' ? at(17) : 0, 24);
+  }
+
+  /** Open (or, with null, close) a place's card on the map: its pin, and nothing else, shows. */
+  select(id: number | null): void {
+    this.selected = id;
+    if (this.map.getLayer('facilities')) this.applyView();
+  }
+
+  get selection(): number | null {
+    return this.selected;
+  }
+
+  /**
+   * Bring a place into the part of the map left visible between the top bar (`top` px) and the sheet
+   * (`bottom` px): a flight when it was chosen from a list or a link, a short glide after a tap on
+   * the map (the live app's focus()). Zoom is in Leaflet levels.
+   */
+  focus(id: number, opts: { legacyZoom?: number; fly: boolean; top: number; bottom: number }): void {
+    const p = this.poi(id);
+    if (!p) return;
+    const zoom = opts.legacyZoom !== undefined ? at(Math.min(LEGACY_MAX, opts.legacyZoom)) : this.map.getZoom();
+    const padding = { top: opts.top, bottom: opts.bottom, left: 0, right: 0 };
+    if (reduce()) this.map.jumpTo({ center: [p.lng, p.lat], zoom, padding });
+    else if (opts.fly) this.map.flyTo({ center: [p.lng, p.lat], zoom, padding, duration: 800, essential: true });
+    else this.map.easeTo({ center: [p.lng, p.lat], zoom, padding, duration: 300 });
   }
 
   /** A facility opened or closed (admin simulator): its look is in the data, so the data is refreshed once. */
@@ -392,6 +446,7 @@ export class MapEngine {
     this.version++;
     if (!this.map.getLayer('facilities')) return;
     this.map.removeLayer('featured');
+    this.map.removeLayer('selected');
     for (const id of ['esri', 'light', 'women-fill', 'women-line', 'inner-dots', 'outer-dots', 'facility-dots', 'mixed-dots', 'facilities', 'parking', 'outer-chips', 'inner-numbers', 'pairs', 'gate-names']) if (this.map.getLayer(id)) this.map.removeLayer(id);
     for (const id of this.map.listImages()) if (id.endsWith(`@${old}`)) this.map.removeImage(id);
     this.addLayers();
@@ -445,7 +500,7 @@ export class MapEngine {
 
   /** The place under a tap: the nearest marker within 16 px (the live app's 32 px hit area). */
   private pick(x: number, y: number) {
-    const layers = ['featured', 'facilities', 'facility-dots', 'mixed-dots', 'parking', 'outer-chips', 'inner-numbers', 'outer-dots', 'inner-dots'].filter((l) => this.map.getLayer(l));
+    const layers = ['selected', 'featured', 'facilities', 'facility-dots', 'mixed-dots', 'parking', 'outer-chips', 'inner-numbers', 'outer-dots', 'inner-dots'].filter((l) => this.map.getLayer(l));
     const hits = this.map.queryRenderedFeatures(
       [
         [x - HIT_PX, y - HIT_PX],
@@ -460,7 +515,7 @@ export class MapEngine {
       const d = Math.hypot(p.x - x, p.y - y);
       if (!best || d < best.d) best = { id: Number(f.properties.id), d };
     }
-    if (best) this.opts.onPick?.(best.id);
+    this.opts.onPick?.(best ? best.id : null);
   }
 }
 

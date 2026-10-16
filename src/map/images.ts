@@ -107,6 +107,7 @@ export interface Drawer {
  *   dot:<color>:<closed>          small facility dot (8 px base)
  *   fac:<icon>.<color>:<closed>   facility disc with its icon (20 px base)
  *   feat:<icon>                   must-visit badge with halo (24 px base)
+ *   pin:<icon>.<color>:<closed>   the chosen place's pin (48 × 60, tip on the spot)
  *   gate:<id>                     outer-gate number chip (19 px tall base)
  *   inum:<id>:<color>             inner-gate number (18 px)
  *   park:<n>:<sub>                car park chip («P n», lock for subscribers)
@@ -326,6 +327,31 @@ export function createDrawer(opts: { palette: Palette; icons: IconAtlas; ratio: 
     return out();
   };
 
+  const pin = (iconName: IconName, color: string, closed: boolean): Drawn => {
+    // The chosen place: a 48 × 60 pin, its tip on the spot, the category's disc and icon (.mk-pin).
+    const W = 48;
+    const H = 60;
+    const [ctx, out] = canvas(W, H, ratio);
+    const fill = closed ? 'cat-gray' : color;
+    const c = { x: W / 2, y: 22 };
+    ctx.save();
+    ctx.shadowColor = 'rgb(0 0 0 / 0.35)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 3;
+    ctx.beginPath();
+    ctx.moveTo(c.x, H - 3);
+    ctx.bezierCurveTo(c.x - 6, H - 14, c.x - 20, c.y + 12, c.x - 20, c.y);
+    ctx.arc(c.x, c.y, 20, Math.PI, 0);
+    ctx.bezierCurveTo(c.x + 20, c.y + 12, c.x + 6, H - 14, c.x, H - 3);
+    ctx.fillStyle = white;
+    ctx.fill();
+    ctx.restore();
+    fillDisc(ctx, c.x, c.y, 17, fill, pal);
+    const glyph = icons.get(iconName, closed ? ink() : white);
+    if (glyph) ctx.drawImage(glyph, c.x - 12, c.y - 12, 24, 24);
+    return out();
+  };
+
   const ctxMeasure = document.createElement('canvas').getContext('2d')!;
 
   return {
@@ -341,6 +367,10 @@ export function createDrawer(opts: { palette: Palette; icons: IconAtlas; ratio: 
         }
         case 'feat':
           return feat(a as IconName);
+        case 'pin': {
+          const [ic, color] = a.split('.');
+          return pin(ic as IconName, color, b === '1');
+        }
         case 'gate':
           return chip(Number(a));
         case 'inum':
