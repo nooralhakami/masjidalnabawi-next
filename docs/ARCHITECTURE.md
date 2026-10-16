@@ -71,10 +71,10 @@ src/
     pois.ts        one GeoJSON source, layers, filter expressions, feature-state (selected / closed)
     sprites.ts     icons, number chips and Arabic labels drawn once to canvas → map.addImage
     women-areas.ts fill layer from routing.json
-    route.ts       base / focus / alternatives / arrows / car-park casings / markers
-    me.ts          visitor dot (one DOM marker), glide, heading cone
+    route.ts       base / focus / alternatives / arrows / car-park casings / markers (as built: layers exist only while a route is shown, and only those it needs)
+    me.ts          visitor dot (one DOM marker), glide, heading cone; accuracy as a GPU circle layer
     camera.ts      fly/fit with safe insets for top bar and sheet; reduced motion
-  app/            map-main.tsx (entry: engine, store → map effects, ?poi=) · App.tsx (everything over the map)
+  app/            map-main.tsx (entry: engine, store → map effects, ?poi=) · App.tsx (everything over the map) · trip.ts (location on demand, plans, re-route, switch, way out, car park question, live navigation)
   landing/        view.ts (pure) · main.ts
   styles/         tokens.css · base.css · …
   design/         /design gallery (dev only, never in the production build)
@@ -98,6 +98,12 @@ tests/unit/  tests/e2e/  scripts/perf.mjs
   - As built (phase 4): `App.select()` sets `selected` and `sheet`; an effect in `map-main` calls `engine.select(id)` (a `selected` layer with the pin, every other layer filtered off) and `engine.focus(id, {top, bottom})` uses MapLibre camera padding (top bar bottom + 8, half-sheet height). Closing the card also clears the search (owner, 2026-10-14).
   - A map tap: the engine picks the nearest marker within 16 px and sends `map-tap`; nothing near → the card closes.
   - `?poi=ID` is read once in `map-main` and handed to `App` as `initial`, opened when the card is mounted (an event sent earlier was lost: a race seen in the e2e run).
+- **Route (as built, phase 5).**
+  - `app/trip.ts` holds the trip: the live app's drawRoute / showPlans / pickRoute / re-route / switch / way-out wiring, unchanged in what it decides.
+  - It writes the `route` (summary), `nav` (tracker snapshot) and `garageQ` (the car park question) signals; `ui/route/` (RouteCard, NavBar, GarageAsk) renders them; `map/route.ts` draws.
+  - The car park question is a Promise answered by the UI (no DOM in the trip).
+  - Camera: `fitBounds` after the sheet has settled to its fitted height (the sheet's `fit` mode: content height, ≤ 45% of the screen); padding is reset first, because MapLibre adds fitBounds' padding to the current one.
+  - Nav types the UI needs (`StepView`, `NavView`, `STATE_LABEL`) live in `presentation/route-view.ts`, so ui/ never imports navigation/. The architecture test now also checks `.tsx` files.
 - **Route.**
   - The sheet's button triggers a location request, only now.
   - In or by the car park, `GarageAsk` asks where the car is.
