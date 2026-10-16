@@ -2,7 +2,7 @@
  * map.html — the map with everything over it: search, categories, the place card (phase 4).
  * Routes and navigation come in phase 5, the Rawdah card, stories, library and languages in phase 6.
  */
-import { effect } from '@preact/signals';
+import { computed, effect } from '@preact/signals';
 import { render } from 'preact';
 import { useState } from 'preact/hooks';
 import '../styles/fonts';
@@ -14,11 +14,12 @@ import { visiblePois } from '../domain/visible';
 import { getLang, nm, t } from '../i18n';
 import { applyLang, initialLang } from '../i18n/dom';
 import { MapEngine, type BaseLayer } from '../map/engine';
-import { filter, markersHidden, parkingSub, query, searching, selected, toiletSub } from '../state/store';
+import { filter, markersHidden, nav, parkingSub, query, searching, selected, sheetH, toiletSub } from '../state/store';
 import { LangContext } from '../ui/i18n';
 import { MapControls, MapTools } from '../ui/shell/MapControls';
 import { applyTheme, savedTheme } from '../ui/theme';
 import { App } from './App';
+import { Trip } from './trip';
 
 applyTheme(savedTheme(), false);
 applyLang(initialLang());
@@ -36,6 +37,14 @@ async function main() {
     nameOf: (p) => nm(p),
     status: (id) => fac.status(id),
     onPick: (id) => document.dispatchEvent(new CustomEvent('map-tap', { detail: id })),
+    routeText: { minutes: (m) => t('r_min', { t: m }), level: (l) => t('lvl_name', { l }), entrance: (p) => nm(p) },
+    meLabel: () => t('you'),
+  });
+
+  const trip = new Trip(engine, {
+    top: () => document.querySelector('.app-top')?.getBoundingClientRect().bottom ?? 0,
+    sheet: () => sheetH.value,
+    bar: () => document.querySelector('.nav-bar, .garage-ask')?.getBoundingClientRect().top ?? innerHeight - sheetH.value,
   });
 
   // The map follows the state: the places of the filter and search, and the card that is open.
@@ -44,6 +53,17 @@ async function main() {
     engine.setView({ ids, filter: filter.value, withFeatured: !searching.value, hidden: markersHidden.value });
   });
   effect(() => engine.select(selected.value));
+  // While navigating, the map's buttons rise above the sheet and the navigation bar (the live app's
+  // body.is-navigating rule, written on the two button columns: no class on <body>).
+  const navigating = computed(() => nav.value !== null);
+  effect(() => {
+    const on = navigating.value;
+    const h = sheetH.value;
+    requestAnimationFrame(() => {
+      const bar = document.querySelector<HTMLElement>('.nav-bar')?.offsetHeight ?? 64;
+      for (const id of ['overlay', 'overlay-left']) document.getElementById(id)!.style.bottom = on ? `${h + bar + 24}px` : '';
+    });
+  });
   fac.onChange(() => engine.refreshStatus());
   addEventListener('resize', () => engine.refit());
 
@@ -58,6 +78,7 @@ async function main() {
     const [base, setBase] = useState<BaseLayer>(engine.baseLayer);
     return (
       <MapTools
+        onLocate={() => void trip.locate()}
         base={base}
         onBase={() => {
           const next = base === 'satellite' ? 'light' : 'satellite';
@@ -88,7 +109,7 @@ async function main() {
       </LangContext.Provider>,
       document.getElementById('overlay-left')!,
     );
-    render(<App key={lang} engine={engine} fac={fac} initial={initial} />, document.getElementById('ui')!);
+    render(<App key={lang} engine={engine} fac={fac} initial={initial} trip={trip} />, document.getElementById('ui')!);
     initial = undefined;
   };
   draw();
@@ -101,7 +122,7 @@ async function main() {
 
 
   // For the browser tests and the performance script only (automated browsers), never for visitors.
-  if (navigator.webdriver) Object.assign(window, { __engine: engine, __fac: fac });
+  if (navigator.webdriver) Object.assign(window, { __engine: engine, __fac: fac, __trip: trip });
 }
 
 void main();

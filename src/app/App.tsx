@@ -1,5 +1,5 @@
 import { useComputed, useSignal } from '@preact/signals';
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { POI_BY_ID } from '../data';
 import type { Poi } from '../data/types';
 import type { Facilities } from '../domain/facilities';
@@ -7,7 +7,12 @@ import { FILTERS, type FilterId, type ParkingSub, type ToiletSub } from '../doma
 import { visiblePois } from '../domain/visible';
 import { getLang, nm, t } from '../i18n';
 import type { MapEngine } from '../map/engine';
-import { filter, level, markersHidden, notify, parkingSub, query, selected, sheet, toast, toiletSub, travel, typed } from '../state/store';
+import { isClosed } from '../domain/facilities';
+import { filter, garageQ, level, markersHidden, nav, notify, parkingSub, query, route, selected, sheet, sheetH, toast, toiletSub, travel, typed } from '../state/store';
+import { GarageAsk } from '../ui/route/GarageAsk';
+import { NavBar } from '../ui/route/NavBar';
+import { RouteCard } from '../ui/route/RouteCard';
+import type { Trip } from './trip';
 import { LangContext } from '../ui/i18n';
 import { Toast } from '../ui/kit/Toast';
 import { SearchArea } from '../ui/search/SearchArea';
@@ -25,10 +30,12 @@ export interface AppProps {
   fac: Facilities;
   /** A place to open as soon as the card is ready (a shared ?poi= link). */
   initial?: Poi;
+  /** Routes and live navigation (phase 5). */
+  trip: Trip;
 }
 
 /** Everything over the map on map.html (phase 4): search, categories, the place card, notices. */
-export function App({ engine, fac, initial }: AppProps) {
+export function App({ engine, fac, initial, trip }: AppProps) {
   const lang = getLang();
   const dark = useSignal(currentTheme() === 'dark');
   const top = useRef<HTMLDivElement>(null);
@@ -43,7 +50,14 @@ export function App({ engine, fac, initial }: AppProps) {
   const rank = (q: string) => visiblePois(filter.value, toiletSub.value, q, fac, undefined, parkingSub.value);
 
   /** Open a place's card: the map flies to it when it was chosen from a list or a link (the live app's select()). */
+  const [routing, setRouting] = useState(false);
+  // A facility opened or closed (works, maintenance): the card shows it at once (the live app's fac.onChange).
+  const [, setFacTick] = useState(0);
+  useEffect(() => fac.onChange(() => setFacTick((n) => n + 1)), [fac]);
+
   const select = (p: Poi, fly: boolean) => {
+    // A new destination ends the current walk entirely (GPS watch, wake lock, the bar).
+    if (selected.value !== p.id) trip.end();
     const wasClosed = sheet.value === 'closed';
     selected.value = p.id;
     if (sheet.value !== 'full') sheet.value = 'half';
@@ -55,6 +69,7 @@ export function App({ engine, fac, initial }: AppProps) {
 
   /** Close the card. Closing it ends the search too (owner, 2026-10-14): every place comes back. */
   const deselect = () => {
+    trip.end();
     selected.value = null;
     sheet.value = 'closed';
     if (typed.value.trim()) {
@@ -63,12 +78,23 @@ export function App({ engine, fac, initial }: AppProps) {
     }
   };
 
+  /** «Route from my location»: the button shows it is busy while the location is asked and the way planned. */
+  const runRoute = async (p: Poi) => {
+    setRouting(true);
+    try {
+      await trip.draw(p);
+    } finally {
+      setRouting(false);
+    }
+  };
+
   useEffect(() => {
     const onPick = (e: Event) => {
       const id = (e as CustomEvent<number | null>).detail;
       const p = id !== null ? POI_BY_ID.get(id) : undefined;
       if (p) select(p, false);
-      else if (selected.value !== null) deselect();
+      // While a route is followed, a stray tap on the map must not end it (use «إنهاء المسار»).
+      else if (selected.value !== null && !trip.active) deselect();
     };
     const onOpen = (e: Event) => select((e as CustomEvent<Poi>).detail, true);
     document.addEventListener('map-tap', onPick);
@@ -137,8 +163,20 @@ export function App({ engine, fac, initial }: AppProps) {
         onDetent={(d) => (d === 'closed' ? deselect() : (sheet.value = d))}
         label={place ? nm(place) : t('sheet_label')}
         extra={extraFor(travel.value)}
+        fit={!!route.value}
+        onHeight={(h) => (sheetH.value = h)}
       >
-        {place ? (
+        {place && route.value ? (
+          <RouteCard
+            p={place}
+            r={route.value}
+            closed={isClosed(fac.status(place.id))}
+            onClose={deselect}
+            onEnd={() => trip.end()}
+            onWayOut={() => void trip.wayOut()}
+            onWayIn={() => void runRoute(place)}
+          />
+        ) : place ? (
           <PlaceCard
             p={place}
             fac={fac}
@@ -146,8 +184,8 @@ export function App({ engine, fac, initial }: AppProps) {
             level={level.value}
             onTravel={(v) => (travel.value = v)}
             onLevel={(v) => (level.value = v)}
-            // The route itself comes in phase 5 (routing/plan.ts is ready, the drawing is not).
-            onRoute={() => undefined}
+            onRoute={() => void runRoute(place)}
+            routing={routing}
             onShare={() => {
               const url = new URL('./map.html', location.href);
               url.search = '';
@@ -159,7 +197,18 @@ export function App({ engine, fac, initial }: AppProps) {
           />
         ) : null}
       </BottomSheet>
-      <div class="toast-host" style={{ '--sheet-h': `${place ? detentHeights(innerHeight, { extra: extraFor(travel.value) })[sheet.value] : 0}px` }}>
+      {nav.value || garageQ.value ? (
+        // The car park question is a modal over the card, from the bottom of the screen (it is too
+        // tall to sit above a half-open card on a short phone); the navigation bar sits above the sheet.
+        <div class={`nav-host${garageQ.value ? ' is-modal' : ''}`} style={{ '--sheet-h': `${place && !garageQ.value ? sheetH.value : 0}px` }}>
+          {garageQ.value ? (
+            <GarageAsk key={garageQ.value.lots.map((l) => l.id).join()} lots={garageQ.value.lots} onAnswer={garageQ.value.answer} />
+          ) : nav.value ? (
+            <NavBar s={nav.value} level={route.value?.drive?.level} onFollow={() => trip.tracker.toggleFollow()} onEnd={() => trip.end()} onKeep={() => trip.tracker.keepGoing()} />
+          ) : null}
+        </div>
+      ) : null}
+      <div class="toast-host" style={{ '--sheet-h': `${place ? sheetH.value : 0}px` }}>
         {toast.value ? (
           <Toast key={toast.value.id} tone={toast.value.tone} icon={toast.value.tone === 'ok' ? 'check' : 'info'}>
             {toast.value.text}
