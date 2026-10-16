@@ -172,7 +172,8 @@ export function SearchArea({ rank, status, onPick, dark, onTheme, onShare }: Sea
                       class="search-row"
                       key={p.id}
                       onMouseDown={(e) => e.preventDefault()}
-                      onMouseEnter={() => setActive(i)}
+                      // Only a pointer that moves picks a row: a panel opening under a resting pointer must not change what Enter opens.
+                      onMouseMove={() => i !== active && setActive(i)}
                       onClick={() => pick(p)}
                     >
                       <PlaceBadge p={p} closed={isClosed(status(p.id))} size={36} />

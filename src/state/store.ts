@@ -1,4 +1,8 @@
 import { computed, effect, signal } from '@preact/signals';
+import type { Poi } from '../data/types';
+import type { NavigationSnapshot } from '../navigation/tracker';
+import type { RouteSummary } from '../presentation/route-view';
+import type { GarageStart } from '../routing/plan';
 import type { FilterId, ParkingSub, ToiletSub } from '../domain/filters';
 import { load, save } from './persist';
 
@@ -60,3 +64,17 @@ export function forgetRecent(): void {
   recent.value = [];
   save(RECENT_KEY, null);
 }
+
+/** The route being followed (phase 5): its summary for the card, or null. */
+export const route = signal<RouteSummary | null>(null);
+/** Live navigation, as the tracker last published it. */
+export const nav = signal<NavigationSnapshot | null>(null);
+/** How tall the sheet is settling to, so the notices and the navigation bar sit just above it. */
+export const sheetH = signal(0);
+
+/** «Where is your car?» (in or by the car park): the question on screen, answered through `answer`. */
+export interface GarageQuestion {
+  lots: Poi[];
+  answer(start: GarageStart | null): void;
+}
+export const garageQ = signal<GarageQuestion | null>(null);

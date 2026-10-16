@@ -48,12 +48,14 @@ export function MapControls({ onZoom, onTurn, onNorth, watchNorth }: Omit<MapCon
   );
 }
 
-/** The left column: the base map now; the stories, library and «my location» buttons join it in later phases. */
-export function MapTools({ base, onBase }: Pick<MapControlsProps, 'base' | 'onBase'>) {
+/** The left column: the base map and «my location»; the stories and library buttons join it in phase 6. */
+export function MapTools({ base, onBase, onLocate }: Pick<MapControlsProps, 'base' | 'onBase'> & { onLocate?(): void }) {
   const { t } = useI18n();
   return (
     <div class="map-controls">
       <IconButton icon="layers" floating label={t(base === 'satellite' ? 'layer_map' : 'layer_sat')} pressed={base === 'light'} onClick={onBase} />
+      {/* Location is asked for only on this tap (or «route from my location»), never before. */}
+      {onLocate ? <IconButton icon="locate" floating class="mc-locate" label={t('gps')} onClick={onLocate} /> : null}
     </div>
   );
 }

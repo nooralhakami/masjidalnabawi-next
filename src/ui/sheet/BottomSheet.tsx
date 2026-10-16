@@ -11,6 +11,13 @@ export interface BottomSheetProps {
   /** Extra height for the half detent (the walking/car and level rows, as in the live app). */
   extra?: number;
   label: string;
+  /**
+   * The half detent fits the content instead (a route summary: exactly the card and its end button,
+   * never more than 45% of the screen, as the live app), so most of the map stays visible.
+   */
+  fit?: boolean;
+  /** The visible height the sheet is settling to (for what sits above it: notices, the navigation bar). */
+  onHeight?(px: number): void;
   children: ComponentChildren;
 }
 
@@ -29,7 +36,7 @@ const haptic = () => {
  * Only `transform` moves, written straight to the element: no re-render per frame. Its content
  * scrolls only at full height, so a drag is never mistaken for a scroll.
  */
-export function BottomSheet({ detent, onDetent, allowed = DETENTS, extra = 0, label, children }: BottomSheetProps) {
+export function BottomSheet({ detent, onDetent, allowed = DETENTS, extra = 0, label, fit = false, onHeight, children }: BottomSheetProps) {
   const { t } = useI18n();
   const host = useRef<HTMLDivElement>(null);
   const sheet = useRef<HTMLElement>(null);
@@ -40,12 +47,26 @@ export function BottomSheet({ detent, onDetent, allowed = DETENTS, extra = 0, la
   useLayoutEffect(() => {
     const el = host.current;
     if (!el) return;
-    const measure = () => setHeights(detentHeights(el.clientHeight, { extra }));
+    const measure = () => {
+      const h = detentHeights(el.clientHeight, { extra });
+      const content = fit ? sheet.current?.querySelector<HTMLElement>('.sheet-body > *') : null;
+      if (content) {
+        const body = content.parentElement!;
+        const handle = sheet.current!.querySelector<HTMLElement>('.sheet-handle');
+        const need = (handle?.offsetHeight ?? 0) + content.offsetHeight + (parseFloat(getComputedStyle(body).paddingBottom) || 0);
+        h.half = Math.min(h.full, Math.ceil(need), Math.round(el.clientHeight * 0.45));
+      }
+      setHeights((old) => (old.half === h.half && old.full === h.full && old.peek === h.peek ? old : h));
+    };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
+    const content = fit ? sheet.current?.querySelector('.sheet-body > *') : null;
+    if (content) ro.observe(content);
     return () => ro.disconnect();
-  }, [extra]);
+  }, [extra, fit, children]);
+
+  useEffect(() => onHeight?.(heights[detent]), [detent, heights]);
 
   const place = (h: number) => {
     live.current.h = h;
@@ -170,7 +191,8 @@ export function BottomSheet({ detent, onDetent, allowed = DETENTS, extra = 0, la
         aria-label={label}
         aria-hidden={detent === 'closed' ? 'true' : undefined}
         // transform is not here on purpose: Preact would rewrite it on each render and fight the spring.
-        style={{ height: `${heights.full}px` }}
+        // --half: where the visible part ends when half open (the card's footer sits there, as in the live app).
+        style={{ height: `${heights.full}px`, '--half': `${heights.half}px` }}
         onKeyDown={(e) => {
           if (e.key === 'Escape' && detent !== lowest) {
             e.stopPropagation();
