@@ -7,12 +7,12 @@ import type { LangCode } from '../data/types';
  */
 export const SITE = {
   // The QR code is generated from this address so the displayed, copied and downloaded codes stay in sync.
-  QR_URL: 'https://masjidalnabawi.vercel.app/',
+  QR_URL: 'https://masjidalnabawi-next.vercel.app/',
   QR_IMAGE: '',
   // The organisation's name under the title in the landing footer; empty hides the line (owner, 2026-10-16).
   ORG_NAME: '',
   DEFAULT_LANG: 'ar' as LangCode,
-  SITE_URL: 'https://masjidalnabawi.vercel.app/',
+  SITE_URL: 'https://masjidalnabawi-next.vercel.app/',
   /**
    * Light base map. rules.json's CARTO URL now needs an API key, so OpenStreetMap's standard tiles are used.
    * For heavy traffic, follow https://operations.osmfoundation.org/policies/tiles/ or switch to a keyed provider.
