@@ -24,7 +24,8 @@ const FORBIDDEN: Record<string, string[]> = {
   presentation: ['location', 'navigation', 'state', 'ui', 'map', 'app', 'landing'],
   navigation: ['state', 'ui', 'map', 'app', 'landing'],
   state: ['ui', 'map', 'app', 'landing'],
-  map: ['ui', 'app', 'landing'],
+  map: ['ui', 'app', 'landing', 'state'],
+  'i18n-next': ['domain', 'routing', 'location', 'presentation', 'navigation', 'state', 'ui', 'map', 'app', 'landing'],
 };
 
 describe('architecture: module boundaries (ARCHITECTURE.md §2)', () => {
