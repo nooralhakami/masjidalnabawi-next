@@ -73,6 +73,14 @@
   --skeleton: #e8e3d7;
   --scrim: rgb(15 23 20 / 0.32);
   --story-bg: #0b1210;
+  /* the stories are dark in both themes (the live app's tokens) */
+  --story-ink: #ffffff;
+  --story-ink-soft: rgb(255 255 255 / 0.82);
+  --story-bar: rgb(255 255 255 / 0.32);
+  --story-chip: rgb(255 255 255 / 0.16);
+  --story-scrim: 0 0 0;
+  --star-glow: 255 214 120;
+  --gold-ink: #2a1f08;
 
   /* geometry */
   --r-chip: 20px;

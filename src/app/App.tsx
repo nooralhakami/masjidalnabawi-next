@@ -1,14 +1,20 @@
 import { useComputed, useSignal } from '@preact/signals';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { POI_BY_ID } from '../data';
+import { POI_BY_ID, RULES } from '../data';
 import type { Poi } from '../data/types';
 import type { Facilities } from '../domain/facilities';
 import { FILTERS, type FilterId, type ParkingSub, type ToiletSub } from '../domain/filters';
 import { visiblePois } from '../domain/visible';
-import { getLang, nm, t } from '../i18n';
+import { getLang, nm, pack, t } from '../i18n';
+import { applyLang } from '../i18n/dom';
 import type { MapEngine } from '../map/engine';
 import { isClosed } from '../domain/facilities';
-import { filter, garageQ, level, markersHidden, nav, notify, parkingSub, query, route, selected, sheet, sheetH, toast, toiletSub, travel, typed } from '../state/store';
+import { filter, garageQ, level, markersHidden, nav, notify, parkingSub, query, rawdahH, route, selected, sheet, sheetH, toast, toiletSub, travel, typed } from '../state/store';
+import type { AdminPanel as AdminPanelT } from '../ui/admin/AdminPanel';
+import { LanguageMenu } from '../ui/lang/LanguageMenu';
+import type { Library as LibraryT } from '../ui/library/Library';
+import { RawdahHost } from '../ui/rawdah/RawdahHost';
+import type { StoryViewer as StoryViewerT } from '../ui/stories/StoryViewer';
 import { GarageAsk } from '../ui/route/GarageAsk';
 import { NavBar } from '../ui/route/NavBar';
 import { RouteCard } from '../ui/route/RouteCard';
@@ -32,10 +38,31 @@ export interface AppProps {
   initial?: Poi;
   /** Routes and live navigation (phase 5). */
   trip: Trip;
+  /** A shared story (?visit=) or library entry (?lib=) to open at once; ?admin=1. */
+  initialVisit?: number;
+  initialLib?: string;
+  admin?: boolean;
+}
+
+/** The women's entrance to the area behind the Rawdah, facing Gate 21 (the live app's map/main.ts). */
+const BEHIND_RAWDAH_ID = 604;
+
+/**
+ * A part loaded only when first needed (stories, library, admin: their own chunks, so the map's
+ * first load does not carry them). Returns the component once loaded.
+ */
+function useLazy<T>(load: () => Promise<T>): [T | null, () => Promise<T>] {
+  const [mod, setMod] = useState<T | null>(null);
+  const get = async () => {
+    const m = await load();
+    setMod(() => m);
+    return m;
+  };
+  return [mod, get];
 }
 
 /** Everything over the map on map.html (phase 4): search, categories, the place card, notices. */
-export function App({ engine, fac, initial, trip }: AppProps) {
+export function App({ engine, fac, initial, trip, initialVisit, initialLib, admin }: AppProps) {
   const lang = getLang();
   const dark = useSignal(currentTheme() === 'dark');
   const top = useRef<HTMLDivElement>(null);
@@ -51,6 +78,26 @@ export function App({ engine, fac, initial, trip }: AppProps) {
 
   /** Open a place's card: the map flies to it when it was chosen from a list or a link (the live app's select()). */
   const [routing, setRouting] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  // The stories (at a site) and the library (at an entry, or the list) open full screen.
+  const [stories, setStories] = useState<number | null>(null);
+  const [library, setLibrary] = useState<string | null | undefined>(undefined);
+  const opener = useRef<Element | null>(null);
+  const [Stories, loadStories] = useLazy<typeof StoryViewerT>(() => import('../ui/stories/StoryViewer').then((m) => m.StoryViewer));
+  const [Lib, loadLib] = useLazy<typeof LibraryT>(() => import('../ui/library/Library').then((m) => m.Library));
+  const [Admin, loadAdmin] = useLazy<typeof AdminPanelT>(() => import('../ui/admin/AdminPanel').then((m) => m.AdminPanel));
+  const openStories = async (site: number) => {
+    opener.current = document.activeElement;
+    await loadStories();
+    setStories(site);
+  };
+  const openLibrary = async (id?: string) => {
+    opener.current = document.activeElement;
+    await loadLib();
+    setLibrary(id ?? null);
+  };
+  /** Back to the button that opened the stories or the library. */
+  const refocus = () => requestAnimationFrame(() => (opener.current as HTMLElement | null)?.focus?.({ preventScroll: true }));
   // A facility opened or closed (works, maintenance): the card shows it at once (the live app's fac.onChange).
   const [, setFacTick] = useState(0);
   useEffect(() => fac.onChange(() => setFacTick((n) => n + 1)), [fac]);
@@ -97,12 +144,21 @@ export function App({ engine, fac, initial, trip }: AppProps) {
       else if (selected.value !== null && !trip.active) deselect();
     };
     const onOpen = (e: Event) => select((e as CustomEvent<Poi>).detail, true);
+    const onStories = (e: Event) => void openStories((e as CustomEvent<number>).detail ?? 0);
+    const onLibrary = () => void openLibrary();
     document.addEventListener('map-tap', onPick);
     document.addEventListener('open-place', onOpen);
+    document.addEventListener('stories-request', onStories);
+    document.addEventListener('library-request', onLibrary);
     if (initial) select(initial, true);
+    if (initialVisit !== undefined) void openStories(initialVisit);
+    if (initialLib !== undefined) void openLibrary(initialLib);
+    if (admin) void loadAdmin();
     return () => {
       document.removeEventListener('map-tap', onPick);
       document.removeEventListener('open-place', onOpen);
+      document.removeEventListener('stories-request', onStories);
+      document.removeEventListener('library-request', onLibrary);
     };
   }, []);
 
@@ -142,7 +198,20 @@ export function App({ engine, fac, initial, trip }: AppProps) {
             engine.restyle();
           }}
           onShare={() => void share(new URL('./', location.href).href, t('title'), t('app_link_copied'))}
+          langShort={pack(lang).short}
+          onLang={() => setLangOpen(!langOpen)}
         />
+        {langOpen ? (
+          <LanguageMenu
+            current={lang}
+            onClose={() => setLangOpen(false)}
+            onPick={(l) => {
+              setLangOpen(false);
+              // The whole page follows (map-main redraws the UI and the map's labels).
+              if (l !== lang) applyLang(l);
+            }}
+          />
+        ) : null}
         <CategoryRow
           filter={filter.value}
           counts={counts.value}
@@ -207,6 +276,43 @@ export function App({ engine, fac, initial, trip }: AppProps) {
             <NavBar s={nav.value} level={route.value?.drive?.level} onFollow={() => trip.tracker.toggleFollow()} onEnd={() => trip.end()} onKeep={() => trip.tracker.keepGoing()} />
           ) : null}
         </div>
+      ) : null}
+      {!place ? (
+        <RawdahHost
+          onHeight={(h) => (rawdahH.value = h)}
+          onOpen={() => {
+            const gate = POI_BY_ID.get(RULES.rules.rawdah.gate);
+            if (gate) select(gate, true);
+          }}
+          onBehind={() => {
+            const entrance = POI_BY_ID.get(BEHIND_RAWDAH_ID);
+            if (entrance) select(entrance, true);
+          }}
+        />
+      ) : null}
+      {Admin ? <Admin fac={fac} onNotApplicable={() => notify(t('admin_na'))} /> : null}
+      {Stories && stories !== null ? (
+        <Stories
+          site={stories}
+          onClose={() => {
+            setStories(null);
+            refocus();
+          }}
+          onMap={(p) => select(p, true)}
+          onRoute={(p) => {
+            select(p, true);
+            void runRoute(p);
+          }}
+        />
+      ) : null}
+      {Lib && library !== undefined ? (
+        <Lib
+          start={library ?? undefined}
+          onClose={() => {
+            setLibrary(undefined);
+            refocus();
+          }}
+        />
       ) : null}
       <div class="toast-host" style={{ '--sheet-h': `${place ? sheetH.value : 0}px` }}>
         {toast.value ? (

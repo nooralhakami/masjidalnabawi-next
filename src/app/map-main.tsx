@@ -4,19 +4,22 @@
  */
 import { computed, effect } from '@preact/signals';
 import { render } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import '../styles/fonts';
 import '../styles/main.css';
 import { POI_BY_ID } from '../data';
 import { Facilities } from '../domain/facilities';
 import { isHidden } from '../domain/filters';
 import { visiblePois } from '../domain/visible';
+import { VISIT_LIST } from '../domain/visits';
+import { currentWeather, WEATHER_TTL_MS, type Weather } from '../domain/weather';
 import { getLang, nm, t } from '../i18n';
 import { applyLang, initialLang } from '../i18n/dom';
 import { MapEngine, type BaseLayer } from '../map/engine';
-import { filter, markersHidden, nav, parkingSub, query, searching, selected, sheetH, toiletSub } from '../state/store';
+import { filter, markersHidden, nav, parkingSub, query, rawdahH, searching, selected, sheetH, toiletSub } from '../state/store';
 import { LangContext } from '../ui/i18n';
 import { MapControls, MapTools } from '../ui/shell/MapControls';
+import { WeatherChip } from '../ui/shell/WeatherChip';
 import { applyTheme, savedTheme } from '../ui/theme';
 import { App } from './App';
 import { Trip } from './trip';
@@ -53,15 +56,19 @@ async function main() {
     engine.setView({ ids, filter: filter.value, withFeatured: !searching.value, hidden: markersHidden.value });
   });
   effect(() => engine.select(selected.value));
-  // While navigating, the map's buttons rise above the sheet and the navigation bar (the live app's
-  // body.is-navigating rule, written on the two button columns: no class on <body>).
+  // The map's buttons sit above what is at the bottom: while navigating, the sheet and the bar
+  // (the live app's body.is-navigating rule); with no card open, the Rawdah cards. Written on the two
+  // button columns, never as a class on <body>.
   const navigating = computed(() => nav.value !== null);
+  const open = computed(() => selected.value !== null);
   effect(() => {
     const on = navigating.value;
     const h = sheetH.value;
+    const r = open.value ? 0 : rawdahH.value;
     requestAnimationFrame(() => {
       const bar = document.querySelector<HTMLElement>('.nav-bar')?.offsetHeight ?? 64;
-      for (const id of ['overlay', 'overlay-left']) document.getElementById(id)!.style.bottom = on ? `${h + bar + 24}px` : '';
+      const bottom = on ? `${h + bar + 24}px` : r ? `${r + 28}px` : '';
+      for (const id of ['overlay', 'overlay-left']) document.getElementById(id)!.style.bottom = bottom;
     });
   });
   fac.onChange(() => engine.refreshStatus());
@@ -74,10 +81,28 @@ async function main() {
     return () => engine.map.off('rotate', on);
   };
 
+  // The weather in Madinah, every 30 minutes (none offline: the chip stays hidden).
+  let weather: Weather | null = null;
+  const weatherListeners = new Set<(w: Weather | null) => void>();
+  const loadWeather = async () => {
+    weather = (await currentWeather()) ?? weather;
+    weatherListeners.forEach((f) => f(weather));
+  };
+  void loadWeather();
+  setInterval(() => void loadWeather(), WEATHER_TTL_MS);
+
   function Tools() {
     const [base, setBase] = useState<BaseLayer>(engine.baseLayer);
+    const [w, setW] = useState(weather);
+    useEffect(() => {
+      weatherListeners.add(setW);
+      return () => void weatherListeners.delete(setW);
+    }, []);
     return (
       <MapTools
+        weather={<WeatherChip w={w} />}
+        onStories={() => document.dispatchEvent(new CustomEvent('stories-request', { detail: 0 }))}
+        onLibrary={() => document.dispatchEvent(new CustomEvent('library-request'))}
         onLocate={() => void trip.locate()}
         base={base}
         onBase={() => {
@@ -94,6 +119,12 @@ async function main() {
   const linked = Number(new URLSearchParams(location.search).get('poi'));
   const shared = Number.isInteger(linked) ? POI_BY_ID.get(linked) : undefined;
   let initial = shared && !isHidden(shared) ? shared : undefined;
+  // A shared story (?visit=543) or library entry (?lib=umar); ?admin=1 shows the status simulator.
+  const params = new URLSearchParams(location.search);
+  const visitAt = VISIT_LIST.findIndex((v) => v.poi.id === Number(params.get('visit')));
+  let initialVisit = visitAt >= 0 ? visitAt : undefined;
+  let initialLib = params.get('lib') ?? undefined;
+  const admin = params.get('admin') === '1';
 
   const draw = () => {
     const lang = getLang();
@@ -109,8 +140,8 @@ async function main() {
       </LangContext.Provider>,
       document.getElementById('overlay-left')!,
     );
-    render(<App key={lang} engine={engine} fac={fac} initial={initial} trip={trip} />, document.getElementById('ui')!);
-    initial = undefined;
+    render(<App key={lang} engine={engine} fac={fac} initial={initial} initialVisit={initialVisit} initialLib={initialLib} admin={admin} trip={trip} />, document.getElementById('ui')!);
+    initial = initialVisit = initialLib = undefined;
   };
   draw();
 
