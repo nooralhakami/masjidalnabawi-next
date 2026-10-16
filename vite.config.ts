@@ -1,18 +1,131 @@
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { createServer, type Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 import tailwindcss from '@tailwindcss/vite';
+import { VitePWA } from 'vite-plugin-pwa';
+import { HIDDEN_SUBCATEGORIES } from './src/data/hidden';
 
-// Phase 1: the map page only. The landing page, PWA and CSS inlining come back in phase 7.
+const POIS: { category: string; subCategory: string }[] = JSON.parse(readFileSync(resolve(import.meta.dirname, 'data/pois.json'), 'utf8'));
+/** The landing page's numbers, computed from the data at build time (the live app's vite.config.ts). */
+const DEFINE = {
+  __POI_COUNTS__: JSON.stringify({
+    // The places a visitor can actually find (hidden ones, such as the wheelchair areas, are not counted).
+    places: POIS.filter((p) => !HIDDEN_SUBCATEGORIES.has(p.subCategory)).length,
+    gates: POIS.filter((p) => p.category === 'gates').length,
+    parking: POIS.filter((p) => p.category === 'parking').length,
+  }),
+};
+const OXC = { jsx: { runtime: 'automatic', importSource: 'preact' } } as const;
+
+/**
+ * Prerender the Arabic landing page into index.html, so its content paints before any script
+ * loads (SPEC F10). The browser keeps it when the visitor's language is Arabic, re-renders otherwise.
+ */
+function prerenderLanding(): Plugin {
+  return {
+    name: 'prerender-landing',
+    transformIndexHtml: {
+      order: 'pre',
+      async handler(html, ctx) {
+        if (!ctx.filename.endsWith('index.html') || !html.includes('<div id="app"></div>')) return html;
+        const server = ctx.server ?? (await createServer({ configFile: false, define: DEFINE, oxc: OXC, logLevel: 'silent', server: { middlewareMode: true }, appType: 'custom' }));
+        try {
+          const { landingHtml } = await server.ssrLoadModule('/src/landing/view.ts');
+          return html.replace('<div id="app"></div>', `<div id="app" data-prerendered="ar">${landingHtml('')}</div>`);
+        } finally {
+          if (!ctx.server) await server.close();
+        }
+      },
+    },
+  };
+}
+
+/**
+ * Inline each page's stylesheets into its HTML at build time: no render-blocking request (the HTML
+ * itself is precached by the service worker). Asset URLs inside are rewritten to stay valid. Lazy
+ * parts (stories, library) keep their own CSS files, loaded with them.
+ */
+function inlineCss(): Plugin {
+  return {
+    name: 'inline-css',
+    apply: 'build',
+    enforce: 'post',
+    generateBundle(_opts, bundle) {
+      const inlined = new Set<string>();
+      for (const file of Object.values(bundle)) {
+        if (file.type !== 'asset' || !file.fileName.endsWith('.html')) continue;
+        let html = String(file.source);
+        html = html.replace(/<link rel="stylesheet"[^>]*href="\.\/(assets\/[^"]+\.css)"[^>]*>/g, (tag, path: string) => {
+          const css = bundle[path];
+          if (!css || css.type !== 'asset') return tag;
+          const code = String(css.source).replace(/url\((['"]?)\.\//g, 'url($1./assets/');
+          inlined.add(path);
+          return `<style>${code}</style>`;
+        });
+        file.source = html;
+      }
+      for (const path of inlined) delete bundle[path];
+    },
+  };
+}
+
 export default defineConfig({
   // Relative URLs so the build works on any host or sub-path.
   base: './',
-  plugins: [tailwindcss()],
+  define: DEFINE,
+  plugins: [
+    tailwindcss(),
+    prerenderLanding(),
+    inlineCss(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      // Registration happens in each page entry (src/app/pwa.ts).
+      injectRegister: false,
+      manifest: {
+        id: './map.html',
+        name: 'دليل زوار المسجد النبوي',
+        short_name: 'دليل الزوار',
+        // The live app's manifest still said «six languages»: corrected to the 26 it offers.
+        description: 'خريطة تفاعلية للبوابات ودورات المياه والمواقف والخدمات حول المسجد النبوي بـ26 لغة.',
+        lang: 'ar',
+        dir: 'rtl',
+        start_url: './map.html',
+        scope: './',
+        display: 'standalone',
+        orientation: 'portrait',
+        background_color: '#F4F1EA',
+        theme_color: '#0E4D3A',
+        categories: ['travel', 'navigation'],
+        icons: [
+          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'icons/maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: 'icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+      workbox: {
+        // App shell, its lazy parts, the map's worker and the fonts (Arabic and Latin subsets only).
+        globPatterns: ['**/*.{html,js,mjs,css,jpg,webp}', 'icons/icon.svg', 'icons/apple-touch-icon.png', 'assets/*-{arabic,latin}-*.woff2'],
+        // Landmark photos (public/visits/) load on demand; the design gallery is not part of the app.
+        globIgnores: ['visits/**', 'design.html', '**/*-cyrillic*', '**/*-greek*', '**/*-vietnamese*', '**/*-math-*', '**/*-symbols-*'],
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // Map tiles (Esri / OpenStreetMap) are cross-origin and deliberately never cached (CLAUDE.md).
+        runtimeCaching: [],
+        navigateFallback: null,
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+      },
+      devOptions: { enabled: false },
+    }),
+  ],
   // Preact's automatic JSX runtime (tsconfig sets the same for type-checking).
-  oxc: { jsx: { runtime: 'automatic', importSource: 'preact' } },
+  oxc: OXC,
   build: {
     target: 'es2020',
     rollupOptions: {
-      input: { map: resolve(import.meta.dirname, 'map.html') },
+      input: { index: resolve(import.meta.dirname, 'index.html'), map: resolve(import.meta.dirname, 'map.html') },
     },
   },
   test: {

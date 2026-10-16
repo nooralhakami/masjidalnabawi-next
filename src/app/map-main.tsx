@@ -22,6 +22,7 @@ import { MapControls, MapTools } from '../ui/shell/MapControls';
 import { WeatherChip } from '../ui/shell/WeatherChip';
 import { applyTheme, savedTheme } from '../ui/theme';
 import { App } from './App';
+import { initPwa } from './pwa';
 import { Trip } from './trip';
 
 applyTheme(savedTheme(), false);
@@ -157,3 +158,4 @@ async function main() {
 }
 
 void main();
+initPwa();
