@@ -78,3 +78,6 @@ export interface GarageQuestion {
   answer(start: GarageStart | null): void;
 }
 export const garageQ = signal<GarageQuestion | null>(null);
+
+/** Height of the Rawdah cards at the bottom (0 when hidden), so the map's buttons sit above them. */
+export const rawdahH = signal(0);

@@ -61,7 +61,7 @@ export function SearchBar({
           {value ? <IconButton icon="close" label={t('clear')} class="search-clear" onClick={onClear} /> : null}
         </label>
         {langShort && onLang ? (
-          <button type="button" class="lang-btn" aria-haspopup="true" aria-label={t('lang_title')} title={t('lang_title')} onClick={onLang}>
+          <button type="button" class="lang-btn" id="lang-btn" aria-haspopup="true" aria-controls="lang-menu" aria-label={t('lang_title')} title={t('lang_title')} onClick={onLang}>
             <Icon name="globe" size={18} />
             <span>{langShort}</span>
           </button>

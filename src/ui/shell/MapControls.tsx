@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 import { IconButton } from '../kit/Button';
 import { useI18n } from '../i18n';
@@ -48,12 +49,25 @@ export function MapControls({ onZoom, onTurn, onNorth, watchNorth }: Omit<MapCon
   );
 }
 
-/** The left column: the base map and «my location»; the stories and library buttons join it in phase 6. */
-export function MapTools({ base, onBase, onLocate }: Pick<MapControlsProps, 'base' | 'onBase'> & { onLocate?(): void }) {
+/**
+ * The left column, as the live app's: the landmark stories, the library, the base map and «my
+ * location», with the weather chip above them.
+ */
+export function MapTools({
+  base,
+  onBase,
+  onLocate,
+  onStories,
+  onLibrary,
+  weather,
+}: Pick<MapControlsProps, 'base' | 'onBase'> & { onLocate?(): void; onStories?(): void; onLibrary?(): void; weather?: ComponentChildren }) {
   const { t } = useI18n();
   return (
     <div class="map-controls">
-      <IconButton icon="layers" floating label={t(base === 'satellite' ? 'layer_map' : 'layer_sat')} pressed={base === 'light'} onClick={onBase} />
+      {weather}
+      {onStories ? <IconButton icon="landmark" floating class="mc-stories" label={t('st_open')} onClick={onStories} /> : null}
+      {onLibrary ? <IconButton icon="book" floating class="mc-library" label={t('lib_title')} onClick={onLibrary} /> : null}
+      <IconButton icon="layers" floating class="mc-layers" label={t(base === 'satellite' ? 'layer_map' : 'layer_sat')} pressed={base === 'light'} onClick={onBase} />
       {/* Location is asked for only on this tap (or «route from my location»), never before. */}
       {onLocate ? <IconButton icon="locate" floating class="mc-locate" label={t('gps')} onClick={onLocate} /> : null}
     </div>
