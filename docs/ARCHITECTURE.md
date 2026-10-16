@@ -51,14 +51,15 @@ src/styles        tokens.css + Tailwind v4 entry + component CSS
 data/ scripts/ public/ docs/                 ported + new docs
 src/
   data/ domain/ routing/ location/ i18n/     ported
-  presentation/  marker-look.ts  place-view.ts  icons.ts
+  i18n-next/     strings.ts — strings the live app never had, in the 26 languages (checked first by ui/i18n)
+  presentation/  marker-look.ts  search-view.ts (groups, 8 shown, highlight)  icons.ts
   navigation/    tracker.ts (ported logic)  steps.ts
-  state/         store.ts (signals)  persist.ts (localStorage, try/catch)
+  state/         store.ts (signals: filter, sub-filters, typed/query, selected, sheet, travel, level, toast, recent)  persist.ts (localStorage, try/catch)
   ui/
     kit/         Button IconButton Chip Toggle FloorSwitch Toast Skeleton Icon Ring
     shell/       TopBar SearchBar CategoryRow SubFilters MapControls WeatherChip
     sheet/       BottomSheet (spring) PlaceCard RouteCard StepBanner ArrivalCard GarageAsk
-    search/      CommandPalette RecentSearches
+    search/      SearchArea (debounce 200 ms, ↑↓ Enter Esc, grouped results, recent searches)
     rawdah/      RawdahCard
     stories/     (lazy chunk)
     library/     (lazy chunk)
@@ -73,7 +74,7 @@ src/
     route.ts       base / focus / alternatives / arrows / car-park casings / markers
     me.ts          visitor dot (one DOM marker), glide, heading cone
     camera.ts      fly/fit with safe insets for top bar and sheet; reduced motion
-  app/            map-main.ts (entry) · router.ts (?poi ?visit ?lib ?admin ?lang)
+  app/            map-main.tsx (entry: engine, store → map effects, ?poi=) · App.tsx (everything over the map)
   landing/        view.ts (pure) · main.ts
   styles/         tokens.css · base.css · …
   design/         /design gallery (dev only, never in the production build)
@@ -94,6 +95,9 @@ tests/unit/  tests/e2e/  scripts/perf.mjs
   - Triggered by a marker tap, a search result or `?poi=ID`.
   - `selected` signal → `feature-state` on the place, and a filter that hides the other places (current behaviour).
   - `camera.flyTo` into the visible gap between the top bar and the sheet, and the sheet springs to half.
+  - As built (phase 4): `App.select()` sets `selected` and `sheet`; an effect in `map-main` calls `engine.select(id)` (a `selected` layer with the pin, every other layer filtered off) and `engine.focus(id, {top, bottom})` uses MapLibre camera padding (top bar bottom + 8, half-sheet height). Closing the card also clears the search (owner, 2026-10-14).
+  - A map tap: the engine picks the nearest marker within 16 px and sends `map-tap`; nothing near → the card closes.
+  - `?poi=ID` is read once in `map-main` and handed to `App` as `initial`, opened when the card is mounted (an event sent earlier was lost: a race seen in the e2e run).
 - **Route.**
   - The sheet's button triggers a location request, only now.
   - In or by the car park, `GarageAsk` asks where the car is.
