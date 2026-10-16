@@ -203,3 +203,26 @@
     --m-draw: 0ms;
   }
 }
+
+/*
+ * Sun mode (DESIGN §1, phase 8): for reading in strong sunlight. Borders as strong as controls,
+ * secondary text as dark (or, at night, as light) as the main text, panels fully opaque. It follows
+ * the device's «increase contrast» setting, or data-contrast="more" on <html> (the visitor's switch,
+ * once the owner places it). Colours stay the owner's: only the weaker ones are lifted.
+ */
+:root[data-contrast='more'] {
+  --muted: var(--ink);
+  --line: var(--outline);
+  --line-strong: var(--ink);
+  --panel: var(--surface-2);
+  --gold-line: var(--gold-500);
+}
+@media (prefers-contrast: more) {
+  :root:not([data-contrast='less']) {
+    --muted: var(--ink);
+    --line: var(--outline);
+    --line-strong: var(--ink);
+    --panel: var(--surface-2);
+    --gold-line: var(--gold-500);
+  }
+}

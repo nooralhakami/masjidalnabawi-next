@@ -45,3 +45,33 @@ test('no route to a place is said, and the button stops waiting', async ({ page,
   await expect(button).not.toHaveAttribute('aria-busy', 'true');
   await expect(page.locator('.route-card')).toHaveCount(0);
 });
+
+test.describe('sun mode (high contrast)', () => {
+  const tokens = (page: import('@playwright/test').Page) =>
+    page.evaluate(() => {
+      const cs = getComputedStyle(document.documentElement);
+      const card = getComputedStyle(document.querySelector('.cat-btn')!);
+      return { muted: cs.getPropertyValue('--muted').trim(), ink: cs.getPropertyValue('--ink').trim(), border: card.borderTopColor };
+    });
+
+  test('remembered on the device: faint text becomes full ink, borders as strong as controls', async ({ page, errors: _ }) => {
+    await page.addInitScript(() => localStorage.setItem('contrast', 'more'));
+    await openMap(page);
+    await expect(page.locator('html')).toHaveAttribute('data-contrast', 'more');
+    const v = await tokens(page);
+    expect(v.muted).toBe(v.ink);
+  });
+
+  test("follows the device's «increase contrast» setting", async ({ page, errors: _ }) => {
+    await page.emulateMedia({ contrast: 'more' });
+    await openMap(page);
+    const v = await tokens(page);
+    expect(v.muted).toBe(v.ink);
+  });
+
+  test('off by default', async ({ page, errors: _ }) => {
+    await openMap(page);
+    const v = await tokens(page);
+    expect(v.muted).not.toBe(v.ink);
+  });
+});

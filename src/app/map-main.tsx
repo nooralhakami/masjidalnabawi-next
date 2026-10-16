@@ -22,12 +22,13 @@ import { LangContext } from '../ui/i18n';
 import { MapControls, MapTools } from '../ui/shell/MapControls';
 import { WeatherChip } from '../ui/shell/WeatherChip';
 import { MapError } from '../ui/shell/MapError';
-import { applyTheme, savedTheme } from '../ui/theme';
+import { applyContrast, applyTheme, savedContrast, savedTheme } from '../ui/theme';
 import { App } from './App';
 import { initPwa } from './pwa';
 import { Trip } from './trip';
 
 applyTheme(savedTheme(), false);
+applyContrast(savedContrast(), false);
 // The visitor's language: its texts arrive (their own file) before anything is drawn, in main().
 const firstLang = initialLang();
 document.documentElement.lang = firstLang;

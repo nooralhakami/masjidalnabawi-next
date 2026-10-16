@@ -17,3 +17,11 @@ export function applyTheme(theme: Theme | null, remember = true): void {
 
 export const currentTheme = (): Theme =>
   (document.documentElement.dataset.theme as Theme | undefined) ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+/** Sun mode (high contrast), remembered as «contrast»; the device's own setting applies without it. */
+export function applyContrast(on: boolean, remember = true): void {
+  if (on) document.documentElement.dataset.contrast = 'more';
+  else delete document.documentElement.dataset.contrast;
+  if (remember) save('contrast', on ? 'more' : null);
+}
+export const savedContrast = (): boolean => load('contrast') === 'more';
