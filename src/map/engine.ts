@@ -391,8 +391,39 @@ export class MapEngine {
 
   /** Show these places (a filter, a search): layer filters only, the data stays as it is. */
   setView(v: PoiView): void {
+    // A new filter (or the markers shown again) pops them in; a search or panning doesn't (the live app's layer.ts).
+    const pop = v.filter !== this.view.filter || (this.view.hidden && !v.hidden);
     this.view = v;
-    if (this.map.getLayer('facilities')) this.applyView();
+    if (!this.map.getLayer('facilities')) return;
+    this.applyView();
+    if (pop && !v.hidden) this.pop();
+  }
+
+  /**
+   * The markers fade in over 200 ms (the live app's .mk-pop): their opacity drops to 0 for one frame,
+   * then rises with a paint transition. A few frames once per filter tap, never during a gesture.
+   */
+  private pop() {
+    if (reduce()) return;
+    const props = (l: string) => (this.map.getLayer(l)?.type === 'circle' ? ['circle-opacity', 'circle-stroke-opacity'] : ['icon-opacity', 'text-opacity']);
+    // A paint property, or its `-transition` (MapLibre's types list only the plain names).
+    type Paint = Parameters<MLMap['setPaintProperty']>[1];
+    const each = (fn: (l: string, p: string) => void) => {
+      for (const l of POP_LAYERS) if (this.map.getLayer(l)) for (const p of props(l)) fn(l, p);
+    };
+    const version = this.version;
+    each((l, p) => {
+      this.map.setPaintProperty(l, `${p}-transition` as Paint, { duration: 0, delay: 0 });
+      this.map.setPaintProperty(l, p as Paint, 0);
+    });
+    this.map.once('render', () => {
+      if (version !== this.version) return;
+      each((l, p) => {
+        this.map.setPaintProperty(l, `${p}-transition` as Paint, { duration: POP_MS, delay: 0 });
+        this.map.setPaintProperty(l, p as Paint, 1);
+      });
+    });
+    this.map.triggerRepaint();
   }
 
   private applyView() {
@@ -552,3 +583,6 @@ function womenAreas(): FeatureCollection {
 }
 
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** The markers that pop in on a new filter (the nine must-visit sites and the open card's pin stay). */
+const POP_LAYERS = ['inner-dots', 'outer-dots', 'facility-dots', 'mixed-dots', 'facilities', 'parking', 'outer-chips', 'inner-numbers', 'pairs', 'gate-names'];
+const POP_MS = 200;
