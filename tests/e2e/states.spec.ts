@@ -93,22 +93,25 @@ test.describe('sun mode (high contrast)', () => {
     expect(v.muted).not.toBe(v.ink);
   });
 
-  test('the search bar still fits at 320 px with the extra button', async ({ page, errors: _ }) => {
-    await page.setViewportSize({ width: 320, height: 640 });
-    for (const lang of ['ar', 'en'] as const) {
-      await openMap(page, lang);
-      const r = await page.evaluate(() => {
-        const bar = document.querySelector('.search-bar')!.getBoundingClientRect();
-        const field = document.querySelector('.search-field')!.getBoundingClientRect();
-        const btns = [...document.querySelectorAll('.search-bar > button, .search-bar > a')].map((b) => b.getBoundingClientRect());
-        return { right: bar.right, left: bar.left, field: field.width, inside: btns.every((b) => b.left >= bar.left - 0.5 && b.right <= bar.right + 0.5 && b.width >= 44 && b.height >= 44) };
-      });
-      expect(r.left).toBeGreaterThanOrEqual(0);
-      expect(r.right).toBeLessThanOrEqual(320);
-      expect(r.inside).toBe(true);
-      expect(r.field).toBeGreaterThanOrEqual(88);
+  test('the top card fits every phone width: buttons whole, ≥ 44 px, and a usable search field', async ({ page, errors: _ }) => {
+    for (const width of [320, 360, 375, 412]) {
+      await page.setViewportSize({ width, height: 700 });
+      for (const lang of ['ar', 'en'] as const) {
+        await openMap(page, lang);
+        const r = await page.evaluate(() => {
+          const card = document.querySelector('.top-card')!.getBoundingClientRect();
+          const field = document.querySelector('.search-field')!.getBoundingClientRect();
+          const btns = [...document.querySelectorAll('.top-card button, .top-card a')].map((b) => b.getBoundingClientRect()).filter((b) => b.width > 0);
+          return { left: card.left, right: card.right, field: field.width, inside: btns.every((b) => b.left >= card.left - 0.5 && b.right <= card.right + 0.5 && b.width >= 44 && b.height >= 44) };
+        });
+        expect(r.left, `${width} ${lang}`).toBeGreaterThanOrEqual(0);
+        expect(r.right, `${width} ${lang}`).toBeLessThanOrEqual(width);
+        expect(r.inside, `${width} ${lang}`).toBe(true);
+        expect(r.field, `${width} ${lang}`).toBeGreaterThan(180);
+      }
     }
   });
+
 });
 
 test('the home button in the search bar leads back to the landing page (the live app)', async ({ page, errors: _ }) => {

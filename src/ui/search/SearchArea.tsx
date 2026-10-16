@@ -23,8 +23,9 @@ export interface SearchAreaProps {
   onTheme(): void;
   contrast?: boolean;
   onContrast?(): void;
-  /** Sharing the app (moved to the landing page, owner 2026-10-16: the bar keeps room for the field). */
   onShare?(): void;
+  /** How many places the map shows now (under the guide's name). */
+  count?: number;
   /** The language button (its short name) and what it opens. */
   langShort?: string;
   onLang?(): void;
@@ -38,7 +39,7 @@ export interface SearchAreaProps {
  * Back in a box with words already in it, the results show again without typing (owner,
  * 2026-10-14). With an empty box, the recent searches (this device only).
  */
-export function SearchArea({ rank, status, onPick, dark, onTheme, contrast, onContrast, onShare, langShort, onLang, onAdmin }: SearchAreaProps) {
+export function SearchArea({ rank, status, onPick, dark, onTheme, contrast, onContrast, onShare, count, langShort, onLang, onAdmin }: SearchAreaProps) {
   const { t, nm, dirName } = useI18n();
   const input = useRef<HTMLInputElement>(null);
   const timer = useRef(0);
@@ -130,6 +131,7 @@ export function SearchArea({ rank, status, onPick, dark, onTheme, contrast, onCo
       contrast={contrast}
       onContrast={onContrast}
       onShare={onShare}
+      count={count}
       langShort={langShort}
       onLang={onLang}
       expanded={expanded}

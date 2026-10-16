@@ -223,6 +223,8 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
           langShort={pack(lang).short}
           onLang={() => setLangOpen(!langOpen)}
           onAdmin={toAdmin}
+          onShare={() => void share(new URL('./', location.href).href, t('title'), t('app_link_copied'))}
+          count={counts.value[filter.value]}
         />
         {langOpen ? (
           <LanguageMenu
