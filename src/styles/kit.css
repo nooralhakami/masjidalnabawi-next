@@ -410,9 +410,17 @@
 }
 /* The narrowest phones: five buttons share the bar with the field, so the language button keeps
    only its short name (the globe is in its label) and the field starts closer to the edge. */
+/* The home link starts the bar; the field's own magnifier stays on wider phones. */
+.home-btn {
+  text-decoration: none;
+  color: var(--ink);
+}
+.search-bar:has(.home-btn) {
+  padding-inline-start: 4px;
+}
 @media (max-width: 359px) {
-  .search-bar {
-    padding-inline-start: var(--s-2);
+  .search-field > .ic {
+    display: none;
   }
   .lang-btn {
     min-width: var(--hit);
@@ -1613,6 +1621,65 @@
   margin: 0;
   color: var(--muted);
   font-size: var(--fs-sm);
+}
+/* The password before the supervisor's page (owner, 2026-10-16). */
+.admin-gate-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: var(--gutter);
+  background: var(--scrim);
+}
+.admin-gate {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-3);
+  width: 100%;
+  max-width: 360px;
+  padding: var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-2);
+}
+.admin-gate-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+.admin-gate-head h2 {
+  margin: 0;
+  font-size: var(--fs-lg, 1.125rem);
+}
+.admin-gate-field {
+  display: grid;
+  gap: var(--s-1, 4px);
+  font-weight: 600;
+}
+.admin-gate-field input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--hit);
+  border: 1px solid var(--outline);
+  border-radius: var(--r-btn);
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+  padding: 0 var(--s-3);
+}
+.admin-gate-field input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+.admin-gate-err {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--fs-sm);
+  font-weight: 600;
 }
 
 /* ---------- Phase 8: the map cannot start ---------- */

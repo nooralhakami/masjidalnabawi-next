@@ -100,7 +100,7 @@ test.describe('sun mode (high contrast)', () => {
       const r = await page.evaluate(() => {
         const bar = document.querySelector('.search-bar')!.getBoundingClientRect();
         const field = document.querySelector('.search-field')!.getBoundingClientRect();
-        const btns = [...document.querySelectorAll('.search-bar > button')].map((b) => b.getBoundingClientRect());
+        const btns = [...document.querySelectorAll('.search-bar > button, .search-bar > a')].map((b) => b.getBoundingClientRect());
         return { right: bar.right, left: bar.left, field: field.width, inside: btns.every((b) => b.left >= bar.left - 0.5 && b.right <= bar.right + 0.5 && b.width >= 44 && b.height >= 44) };
       });
       expect(r.left).toBeGreaterThanOrEqual(0);
@@ -110,3 +110,13 @@ test.describe('sun mode (high contrast)', () => {
     }
   });
 });
+
+test('the home button in the search bar leads back to the landing page (the live app)', async ({ page, errors: _ }) => {
+  await openMap(page, 'ar');
+  const home = page.getByRole('link', { name: 'الصفحة الرئيسية' });
+  await expect(home).toBeVisible();
+  await home.click();
+  await expect(page).toHaveURL(/\/(index\.html)?$/);
+  await expect(page.locator('.btn-cta')).toBeVisible();
+});
+

@@ -108,8 +108,11 @@ test.describe('admin simulator', () => {
     await expect(page.locator('.admin')).toHaveCount(0);
   });
 
-  test('?admin=1: elevator works toggle the pair together', async ({ page, errors: _ }) => {
+  test('?admin=1: elevator works toggle the pair together (after the password)', async ({ page, errors: _ }) => {
     await openMap(page, 'ar', '?admin=1');
+    await expect(page.locator('.admin')).toHaveCount(0);
+    await page.getByLabel('كلمة السر').fill('admin12345');
+    await page.getByRole('button', { name: 'دخول' }).click();
     const admin = page.locator('.admin');
     await admin.locator('summary').click();
     const select = admin.locator('select');
@@ -119,6 +122,45 @@ test.describe('admin simulator', () => {
     await expect(select.locator('option[value="216"]')).toContainText('أعمال مصعد');
     await admin.locator('[data-act="works"]').click();
     await expect(select.locator('option[value="216"]')).toContainText('مفتوح');
+  });
+
+  // Owner, 2026-10-16: offered only for «ADMIN» typed in the search box, then the password.
+  test('«ADMIN» in the search box offers it; «admin» or «Admin» does not', async ({ page, errors: _ }) => {
+    await openMap(page, 'ar');
+    const box = page.getByRole('combobox');
+    for (const word of ['admin', 'Admin', 'ADMI']) {
+      await box.fill(word);
+      await page.waitForTimeout(350);
+      await expect(page.locator('#res-admin')).toHaveCount(0);
+    }
+    await box.fill('ADMIN');
+    await expect(page.locator('#res-admin')).toBeVisible();
+    await box.press('Enter');
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(box).toHaveValue('');
+  });
+
+  test('a wrong password is said and keeps it shut; the right one opens it', async ({ page, errors: _ }) => {
+    await openMap(page, 'ar');
+    await page.getByRole('combobox').fill('ADMIN');
+    await page.locator('#res-admin').click();
+    const pass = page.getByLabel('كلمة السر');
+    await pass.fill('admin');
+    await pass.press('Enter');
+    await expect(page.getByRole('alert')).toHaveText('كلمة السر غير صحيحة');
+    await expect(page.locator('.admin')).toHaveCount(0);
+    await pass.fill('admin12345');
+    await page.getByRole('button', { name: 'دخول' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.locator('.admin')).toBeVisible();
+  });
+
+  test('Esc closes the password window and nothing opens', async ({ page, errors: _ }) => {
+    await openMap(page, 'ar', '?admin=1');
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.locator('.admin')).toHaveCount(0);
   });
 });
 

@@ -3,7 +3,9 @@ import type { Poi } from '../../data/types';
 import type { Status } from '../../data/types';
 import { isClosed } from '../../domain/facilities';
 import { groupResults, highlight, MAX_RESULTS, shownOrder } from '../../presentation/search-view';
+import { isAdminWord } from '../../state/admin';
 import { forgetRecent, query, recent, remember, typed } from '../../state/store';
+import { tNext } from '../../i18n-next/strings';
 import { useI18n } from '../i18n';
 import { Icon } from '../kit/Icon';
 import { PlaceBadge } from '../sheet/PlaceCard';
@@ -21,10 +23,13 @@ export interface SearchAreaProps {
   onTheme(): void;
   contrast?: boolean;
   onContrast?(): void;
-  onShare(): void;
+  /** Sharing the app (moved to the landing page, owner 2026-10-16: the bar keeps room for the field). */
+  onShare?(): void;
   /** The language button (its short name) and what it opens. */
   langShort?: string;
   onLang?(): void;
+  /** «ADMIN» typed exactly: the one row offered opens the supervisor's password (owner, 2026-10-16). */
+  onAdmin?(): void;
 }
 
 /**
@@ -33,7 +38,7 @@ export interface SearchAreaProps {
  * Back in a box with words already in it, the results show again without typing (owner,
  * 2026-10-14). With an empty box, the recent searches (this device only).
  */
-export function SearchArea({ rank, status, onPick, dark, onTheme, contrast, onContrast, onShare, langShort, onLang }: SearchAreaProps) {
+export function SearchArea({ rank, status, onPick, dark, onTheme, contrast, onContrast, onShare, langShort, onLang, onAdmin }: SearchAreaProps) {
   const { t, nm, dirName } = useI18n();
   const input = useRef<HTMLInputElement>(null);
   const timer = useRef(0);
@@ -45,8 +50,9 @@ export function SearchArea({ rank, status, onPick, dark, onTheme, contrast, onCo
   const groups = groupResults(ranked);
   const rows = shownOrder(groups);
   const showRecent = open && !value.trim() && recent.value.length > 0;
-  const showResults = open && !!q.trim() && value.trim() !== '';
-  const expanded = showRecent || showResults;
+  const adminAsked = open && !!onAdmin && isAdminWord(value);
+  const showResults = !adminAsked && open && !!q.trim() && value.trim() !== '';
+  const expanded = showRecent || showResults || adminAsked;
 
   useEffect(() => setActive(0), [q]);
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -77,8 +83,18 @@ export function SearchArea({ rank, status, onPick, dark, onTheme, contrast, onCo
     setOpen(true);
   };
 
+  const toAdmin = () => {
+    clear();
+    setOpen(false);
+    input.current?.blur();
+    onAdmin?.();
+  };
+
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    if (e.key === 'Enter' && onAdmin && isAdminWord(typed.value)) {
+      e.preventDefault();
+      toAdmin();
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       if (!rows.length) return;
       e.preventDefault();
       setOpen(true);
@@ -120,7 +136,7 @@ export function SearchArea({ rank, status, onPick, dark, onTheme, contrast, onCo
       inputRef={input}
       inputProps={{
         'aria-controls': 'search-results',
-        'aria-activedescendant': activeRow ? `res-${activeRow.id}` : undefined,
+        'aria-activedescendant': adminAsked ? 'res-admin' : activeRow ? `res-${activeRow.id}` : undefined,
         onKeyDown,
         onFocus: reopen,
         onClick: reopen,
@@ -151,6 +167,18 @@ export function SearchArea({ rank, status, onPick, dark, onTheme, contrast, onCo
               </span>
             </button>
           ))}
+        </SearchPanel>
+      ) : null}
+      {adminAsked ? (
+        <SearchPanel state="results" id="search-results" head={t('admin_t')}>
+          <button type="button" role="option" id="res-admin" aria-selected={true} class="search-row search-admin" onMouseDown={(e) => e.preventDefault()} onClick={toAdmin}>
+            <span class="search-row-ic">
+              <Icon name="settings" size={18} />
+            </span>
+            <span class="search-row-text">
+              <span class="search-row-name">{tNext('admin_enter')}</span>
+            </span>
+          </button>
         </SearchPanel>
       ) : null}
       {showResults ? (

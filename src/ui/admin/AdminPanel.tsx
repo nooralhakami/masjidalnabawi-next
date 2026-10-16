@@ -7,7 +7,8 @@ import { Icon } from '../kit/Icon';
 const TOILETS = POIS.filter((p) => p.category === 'toilets').sort((a, b) => a.id - b.id);
 
 /**
- * The facility-status simulator (SPEC F11; the live app's ui/admin.ts), shown only with ?admin=1
+ * The facility-status simulator (SPEC F11; the live app's ui/admin.ts), shown only after the password
+ * (AdminGate: «ADMIN» in the search box, or ?admin=1)
  * and folded by default: mark a restroom «maintenance» or «lift works». Lift works in a women's
  * restroom close its pair with it. The change stays on this device, in this page.
  */

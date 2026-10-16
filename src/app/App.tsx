@@ -12,6 +12,8 @@ import type { MapEngine } from '../map/engine';
 import { isClosed } from '../domain/facilities';
 import { filter, garageQ, level, markersHidden, nav, notify, parkingSub, query, rawdahH, route, selected, sheet, sheetH, toast, toiletSub, travel, typed } from '../state/store';
 import type { AdminPanel as AdminPanelT } from '../ui/admin/AdminPanel';
+import { AdminGate } from '../ui/admin/AdminGate';
+import { adminUnlocked } from '../state/admin';
 import { LanguageMenu } from '../ui/lang/LanguageMenu';
 import type { Library as LibraryT } from '../ui/library/Library';
 import { RawdahHost } from '../ui/rawdah/RawdahHost';
@@ -39,7 +41,7 @@ export interface AppProps {
   initial?: Poi;
   /** Routes and live navigation (phase 5). */
   trip: Trip;
-  /** A shared story (?visit=) or library entry (?lib=) to open at once; ?admin=1. */
+  /** A shared story (?visit=) or library entry (?lib=) to open at once; ?admin=1 asks for the supervisor password. */
   initialVisit?: number;
   initialLib?: string;
   admin?: boolean;
@@ -98,6 +100,9 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   const [Stories, loadStories] = useLazy<typeof StoryViewerT>(() => import('../ui/stories/StoryViewer').then((m) => m.StoryViewer));
   const [Lib, loadLib] = useLazy<typeof LibraryT>(() => import('../ui/library/Library').then((m) => m.Library));
   const [Admin, loadAdmin] = useLazy<typeof AdminPanelT>(() => import('../ui/admin/AdminPanel').then((m) => m.AdminPanel));
+  // ?admin=1 or «ADMIN» in the search box: the password first (owner, 2026-10-16).
+  const [gate, setGate] = useState(!!admin && !adminUnlocked.value);
+  const toAdmin = () => (adminUnlocked.value ? void loadAdmin() : setGate(true));
   const openStories = async (site: number) => {
     opener.current = document.activeElement;
     await loadStories();
@@ -165,7 +170,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
     if (initial) select(initial, true);
     if (initialVisit !== undefined) void openStories(initialVisit);
     if (initialLib !== undefined) void openLibrary(initialLib);
-    if (admin) void loadAdmin();
+    if (adminUnlocked.value) void loadAdmin();
     return () => {
       document.removeEventListener('map-tap', onPick);
       document.removeEventListener('open-place', onOpen);
@@ -215,9 +220,9 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
             contrast.value = !contrast.value;
             engine.restyle();
           }}
-          onShare={() => void share(new URL('./', location.href).href, t('title'), t('app_link_copied'))}
           langShort={pack(lang).short}
           onLang={() => setLangOpen(!langOpen)}
+          onAdmin={toAdmin}
         />
         {langOpen ? (
           <LanguageMenu
@@ -309,7 +314,17 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
           }}
         />
       ) : null}
-      {Admin ? <Admin fac={fac} onNotApplicable={() => notify(t('admin_na'))} /> : null}
+      {Admin && adminUnlocked.value ? <Admin fac={fac} onNotApplicable={() => notify(t('admin_na'))} /> : null}
+      {gate ? (
+        <AdminGate
+          onUnlock={() => {
+            adminUnlocked.value = true;
+            setGate(false);
+            void loadAdmin();
+          }}
+          onClose={() => setGate(false)}
+        />
+      ) : null}
       {Stories && stories !== null ? (
         <Stories
           site={stories}

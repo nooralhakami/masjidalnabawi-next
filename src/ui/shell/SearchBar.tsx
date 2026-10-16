@@ -7,7 +7,8 @@ import { useI18n } from '../i18n';
 
 /**
  * The floating search bar at the top of the map: the search field (with clear) and the app's own
- * buttons — the theme, sun mode (high contrast, owner 2026-10-16), sharing the app, and the language.
+ * buttons — home (the landing page, where sharing the app now lives), the language, the theme and sun
+ * mode (high contrast); both choices the owner's, 2026-10-16.
  * Room under it for the panel.
  */
 export function SearchBar({
@@ -48,6 +49,10 @@ export function SearchBar({
   return (
     <div class="search" role="search">
       <div class="search-bar">
+        {/* Back to the landing page (the live app's header button «go_home»). */}
+        <a class="icon-btn home-btn" href="./" aria-label={t('go_home')} title={t('go_home')}>
+          <Icon name="home" />
+        </a>
         <label class="search-field">
           <Icon name="search" />
           <span class="sr-only">{t('ph')}</span>
