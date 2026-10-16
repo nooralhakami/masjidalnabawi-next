@@ -1622,6 +1622,24 @@
   color: var(--muted);
   font-size: var(--fs-sm);
 }
+.admin-sub {
+  margin: var(--s-2) 0 0;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+.admin-ent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+}
+.admin-ent .is-closed {
+  color: var(--danger);
+}
+.admin-ent .is-open {
+  color: var(--success);
+}
 /* The password before the supervisor's page (owner, 2026-10-16). */
 .admin-gate-scrim {
   position: fixed;

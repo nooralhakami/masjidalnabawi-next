@@ -113,8 +113,17 @@ export interface Drawer {
  *   park:<n>:<sub>                car park chip («P n», lock for subscribers)
  *   pair:<n>:<color>              restroom pair number
  *   name:<id>                     a named gate's label (text from labelOf)
+ *   cent:<id>:<open>              a new car park vehicle entrance: car disc, name and open/closed
  */
-export function createDrawer(opts: { palette: Palette; icons: IconAtlas; ratio: number; labelOf(id: number): string; dirOf(id: number): string }): Drawer {
+export function createDrawer(opts: {
+  palette: Palette;
+  icons: IconAtlas;
+  ratio: number;
+  labelOf(id: number): string;
+  dirOf(id: number): string;
+  /** A new vehicle entrance's words (src/data-next/car-entrances.ts), in the visitor's language. */
+  entranceOf?(id: string, open: boolean): { name: string; state: string } | null;
+}): Drawer {
   const { palette: pal, icons, ratio } = opts;
   const white = '#ffffff';
   const ink = () => pal.get('ink-800');
@@ -352,6 +361,44 @@ export function createDrawer(opts: { palette: Palette; icons: IconAtlas; ratio: 
     return out();
   };
 
+  const entrance = (id: string, open: boolean): Drawn | null => {
+    // A chip like a gate's label, with a car disc: grey and edged in red while closed, the car park's
+    // blue and edged in green when open. The words say it too (colour is never the only sign).
+    const words = opts.entranceOf?.(id, open);
+    if (!words) return null;
+    const text = `${words.name} · ${words.state}`;
+    ctxMeasure.font = `700 11px ${FONT}`;
+    const tw = Math.ceil(ctxMeasure.measureText(text).width);
+    const H = 30;
+    const w = 26 + tw + 12;
+    const [ctx, out] = canvas(w + 6, H + 6, ratio);
+    ctx.save();
+    ctx.shadowColor = 'rgb(14 77 58 / 0.18)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 2;
+    roundRect(ctx, 3, 3, w, H, H / 2);
+    ctx.fillStyle = pal.get('surface-2');
+    ctx.fill();
+    ctx.restore();
+    roundRect(ctx, 4, 4, w - 2, H - 2, (H - 2) / 2);
+    ctx.strokeStyle = pal.get(open ? 'success' : 'danger');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // The disc at the start of the reading direction: on the right in Arabic, Urdu, Persian, Pashto.
+    const rtl = document.documentElement.dir === 'rtl';
+    const cx = rtl ? 3 + w - H / 2 : 3 + H / 2;
+    fillDisc(ctx, cx, 3 + H / 2, 10, open ? 'cat-men' : 'cat-gray', pal);
+    const glyph = icons.get('car', open ? white : ink());
+    if (glyph) ctx.drawImage(glyph, cx - 7, 3 + H / 2 - 7, 14, 14);
+    ctx.fillStyle = pal.get('ink');
+    ctx.font = `700 11px ${FONT}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.direction = rtl ? 'rtl' : 'ltr';
+    ctx.fillText(text, rtl ? 3 + 8 + tw / 2 : 3 + 26 + tw / 2 + 4, 3 + H / 2 + 0.5);
+    return out();
+  };
+
   const ctxMeasure = document.createElement('canvas').getContext('2d')!;
 
   return {
@@ -381,6 +428,8 @@ export function createDrawer(opts: { palette: Palette; icons: IconAtlas; ratio: 
           return pair(Number(a), b);
         case 'name':
           return name(Number(a));
+        case 'cent':
+          return entrance(a, b === '1');
         default:
           return null;
       }

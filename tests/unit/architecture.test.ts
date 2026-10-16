@@ -25,6 +25,7 @@ const FORBIDDEN: Record<string, string[]> = {
   navigation: ['state', 'ui', 'map', 'app', 'landing'],
   state: ['ui', 'map', 'app', 'landing'],
   map: ['ui', 'app', 'landing', 'state'],
+  'data-next': ['domain', 'routing', 'location', 'i18n', 'i18n-next', 'presentation', 'navigation', 'state', 'ui', 'map', 'app', 'landing'],
   'i18n-next': ['domain', 'routing', 'location', 'presentation', 'navigation', 'state', 'ui', 'map', 'app', 'landing'],
 };
 

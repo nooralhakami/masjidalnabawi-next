@@ -3,6 +3,7 @@ import { AttributionControl, Map as MLMap, ScaleControl, setWorkerUrl, type Expr
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
+import { CAR_ENTRANCES } from '../data-next/car-entrances';
 import { POIS, ROUTING, RULES } from '../data';
 import type { Poi, Status } from '../data/types';
 import { isClosed } from '../domain/facilities';
@@ -42,6 +43,10 @@ export interface MapEngineOptions {
   routeText: RouteText;
   /** The visitor's dot, for screen readers («أنت هنا»). */
   meLabel(): string;
+  /** A new car park vehicle entrance's name and state, in the visitor's language (owner, 2026-10-16). */
+  entranceText?(id: string, open: boolean): { name: string; state: string } | null;
+  /** A tap on one of those entrances. */
+  onEntrance?(id: string): void;
 }
 
 const DIRS: Record<string, string> = { south: 'dir-south', west: 'dir-west', north: 'dir-north', east: 'dir-east' };
@@ -108,6 +113,7 @@ export class MapEngine {
           women: { type: 'geojson', data: womenAreas() },
           pois: { type: 'geojson', data: this.features(), promoteId: 'id' },
           pairs: { type: 'geojson', data: this.pairFeatures() },
+          carEntrances: { type: 'geojson', data: this.entranceFeatures() },
         },
         layers: [],
       },
@@ -126,6 +132,7 @@ export class MapEngine {
       ratio,
       labelOf: (id) => this.opts.nameOf(POIS.find((p) => p.id === id)!),
       dirOf: (id) => DIRS[POIS.find((p) => p.id === id)!.direction],
+      entranceOf: (id, open) => this.opts.entranceText?.(id, open) ?? null,
     }));
     // Marker images are drawn the first time the map needs one (images.ts). MapLibre 6 resolves a
     // missing image through this hook; the styleimagemissing event can no longer supply it.
@@ -137,7 +144,7 @@ export class MapEngine {
     this.map.once('zoomstart', (e) => e.originalEvent && (this.touched = true));
     this.map.on('click', (e) => this.pick(e.point.x, e.point.y));
 
-    const icons = [...new Set(POIS.map((p) => lookOf(p).icon)), 'lock'] as IconName[];
+    const icons = [...new Set(POIS.map((p) => lookOf(p).icon)), 'lock', 'car'] as IconName[];
     this.ready = Promise.all([
       this.icons.load(icons, ['#ffffff', this.palette.get('ink-800')]),
       document.fonts?.load(`600 11px "IBM Plex Sans Arabic"`).catch(() => undefined),
@@ -146,6 +153,26 @@ export class MapEngine {
   }
 
   // ---------- data ----------
+
+  /** Which new vehicle entrances are open (all closed until the supervisor opens one). */
+  private entranceState: Record<string, boolean> = {};
+
+  private entranceFeatures(): FeatureCollection {
+    return {
+      type: 'FeatureCollection',
+      features: CAR_ENTRANCES.map((e) => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [e.lng, e.lat] },
+        properties: { eid: e.id, open: this.entranceState[e.id] ? 1 : 0 },
+      })),
+    };
+  }
+
+  /** The supervisor opened or closed one: three features, redrawn at once. */
+  setEntrances(open: Record<string, boolean>): void {
+    this.entranceState = { ...open };
+    (this.map.getSource('carEntrances') as GeoJSONSource | undefined)?.setData(this.entranceFeatures());
+  }
 
   private features(): FeatureCollection {
     return {
@@ -329,6 +356,25 @@ export class MapEngine {
       source: 'pois',
       layout: { ...symbol, 'icon-image': this.img('feat:', ['get', 'icon']), 'icon-size': ['step', ['zoom'], 1, at(19), 30 / 24] },
     });
+    // The new vehicle entrances (with the car parks' pill only), under the chosen place's pin.
+    const rtl = document.documentElement.dir === 'rtl';
+    m.addLayer(
+      {
+        id: 'car-entrances',
+        type: 'symbol',
+        source: 'carEntrances',
+        layout: {
+          ...symbol,
+          'icon-image': this.img('cent:', ['get', 'eid'], ':', ['to-string', ['get', 'open']]),
+          // The car disc on the spot, the words beside it, after it in the reading direction
+          // (images.ts: the disc's centre is 18 px in from its side).
+          'icon-anchor': rtl ? 'right' : 'left',
+          'icon-offset': [rtl ? 18 : -18, 0],
+          visibility: 'none',
+        },
+      },
+      'selected',
+    );
     // The route and the visitor's dot under the chosen place's pin.
     this.route.install('selected');
     this.me.install('selected');
@@ -455,6 +501,8 @@ export class MapEngine {
     // The number between a pair's two markers, only while both are on the map.
     const both = ['all', ['in', ['get', 'id'], ['literal', [...ids]]], ['in', ['get', 'b'], ['literal', [...ids]]]] as unknown as ExpressionSpecification;
     this.map.setFilter('pairs', (off ? ['literal', false] : both) as FilterSpecification);
+    // The new vehicle entrances show with the car parks' pill, like the car parks themselves.
+    this.map.setLayoutProperty('car-entrances', 'visibility', filter === 'parking' && !off ? 'visible' : 'none');
     // Zoomed out (≤ 16) with «All», inner gates wait until 17; a gates filter shows them at any zoom (visibleAtZoom).
     this.map.setLayerZoomRange('inner-dots', filter === 'all' ? at(17) : 0, 24);
   }
@@ -497,7 +545,7 @@ export class MapEngine {
     if (!this.map.getLayer('facilities')) return;
     this.map.removeLayer('featured');
     this.map.removeLayer('selected');
-    for (const id of ['esri', 'light', 'women-fill', 'women-line', 'inner-dots', 'outer-dots', 'facility-dots', 'mixed-dots', 'facilities', 'parking', 'outer-chips', 'inner-numbers', 'pairs', 'gate-names']) if (this.map.getLayer(id)) this.map.removeLayer(id);
+    for (const id of ['car-entrances', 'esri', 'light', 'women-fill', 'women-line', 'inner-dots', 'outer-dots', 'facility-dots', 'mixed-dots', 'facilities', 'parking', 'outer-chips', 'inner-numbers', 'pairs', 'gate-names']) if (this.map.getLayer(id)) this.map.removeLayer(id);
     for (const id of this.map.listImages()) if (id.endsWith(`@${old}`) && !id.startsWith('rt')) this.map.removeImage(id);
     this.route.restyle();
     this.addLayers();
@@ -556,6 +604,19 @@ export class MapEngine {
     if (alt !== null) {
       this.route.pick(alt);
       return;
+    }
+    if (this.map.getLayer('car-entrances')) {
+      const ent = this.map.queryRenderedFeatures(
+        [
+          [x - HIT_PX, y - HIT_PX],
+          [x + HIT_PX, y + HIT_PX],
+        ],
+        { layers: ['car-entrances'] },
+      );
+      if (ent.length) {
+        this.opts.onEntrance?.(String(ent[0].properties.eid));
+        return;
+      }
     }
     const layers = ['selected', 'featured', 'facilities', 'facility-dots', 'mixed-dots', 'parking', 'outer-chips', 'inner-numbers', 'outer-dots', 'inner-dots'].filter((l) => this.map.getLayer(l));
     const hits = this.map.queryRenderedFeatures(
