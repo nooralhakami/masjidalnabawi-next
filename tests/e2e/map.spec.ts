@@ -200,10 +200,12 @@ test.describe('map buttons', () => {
       return [p.lng, p.lat] as [number, number];
     });
     await zoomTo(page, 19, at);
-    const picked = page.evaluate(() => new Promise<number>((r) => document.addEventListener('poi-pick', (e) => r((e as CustomEvent).detail.id), { once: true })));
+    const picked = page.evaluate(() => new Promise<number>((r) => document.addEventListener('map-tap', (e) => r((e as CustomEvent).detail), { once: true })));
     const box = (await page.locator('#map').boundingBox())!;
     await page.mouse.click(box.x + box.width / 2 + 3, box.y + box.height / 2 - 2);
     expect(await picked).toBe(215);
+    // The tap opens its card (phase 4).
+    await expect(page.locator('.sheet .pc-title')).toContainText('215');
   });
 });
 
