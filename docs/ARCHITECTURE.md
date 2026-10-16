@@ -114,7 +114,8 @@ tests/unit/  tests/e2e/  scripts/perf.mjs
 - **Base layers.** Raster Esri (`tileSize: 256`, `maxzoom` 19 in tile terms) and OSM light.
   - Attribution is always visible: «Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics» + «© OpenStreetMap».
   - The first tiles are preloaded in `map.html` before JS, as in the live app, recomputed for MapLibre's scale.
-- **Labels.** No external glyph server. MapLibre 6 symbol layers draw text from the page's own fonts (TinySDF) and shape Arabic and bidirectional text itself (Phase 1 spike). Canvas sprites remain the fallback if one language misrenders.
+- **Labels and marker images.** No external glyph server and no text layers. Every marker (dots, icon discs, number chips, car-park chips, must-visit badges with their halo, pair numbers, gate-name labels) is an image drawn on a canvas in the live app's shapes (`map/images.ts`), with the app's fonts, so the browser shapes Arabic. An image is drawn the first time the map needs it (`map.setMissingStyleImageResolver`, MapLibre 6; the old `styleimagemissing` event can no longer supply one), and the rest are drawn ahead in idle time. Image ids end in `@<version>`; a theme or language change bumps the version and the layers ask for fresh images.
+- **Marker rules.** `presentation/marker-look.ts` turns each place into feature properties (kind, colour token, icon, image key); a unit test checks it agrees with the live app's `markerSpec` for all 324 places. Facility markers never collide (`icon-allow-overlap` + `icon-ignore-placement`: nothing is merged or hidden); only outer-gate chips and gate-name labels collide, as the live app declutters them.
 - **Worker.** MapLibre 6 runs its worker from a separate module: `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'` + `setWorkerUrl(workerUrl)`, so Vite bundles it with its shared chunk. Version 6 has no default export: import by name.
 - **Rotation.** Two-finger rotate and the ±15° buttons.
   - The compass needle follows true north, with the Kaaba mark toward the qibla.
@@ -124,6 +125,7 @@ tests/unit/  tests/e2e/  scripts/perf.mjs
   - Level A gets a yellow casing; ramps get a yellow (up) or green (down) casing.
   - Arrows are a symbol layer with `symbol-placement: line`, spacing ≈ 55 m converted per zoom.
   - Alternatives are faint lines with a wide invisible hit line and a time label.
+- **Map buttons.** As in the live app, whatever the language: zoom and rotation on the right, the other buttons (base map now; stories, library, my location later) on the left. +15° turns the map clockwise (MapLibre bearing −15); the compass needle shows where north is on screen.
 - **Visitor dot.** One DOM marker, glide 900 ms ease-out.
   - The accuracy circle is a GeoJSON circle (fill).
   - The heading cone is compensated for bearing.

@@ -891,3 +891,90 @@
     transition: none;
   }
 }
+
+/* ---------- Map controls ---------- */
+.map-controls {
+  display: grid;
+  gap: var(--s-2);
+  justify-items: center;
+}
+.mc-group {
+  display: grid;
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+}
+.mc-group .icon-btn + .icon-btn,
+.mc-group .mc-compass + .icon-btn,
+.mc-group .icon-btn + .mc-compass {
+  border-top: 1px solid var(--line);
+}
+.mc-group .icon-btn {
+  border-radius: 0;
+}
+.mc-compass {
+  display: grid;
+}
+/* The needle (and the Kaaba mark opposite it) turns with true north on screen. */
+.mc-compass .ic {
+  transform: rotate(var(--north, 0deg));
+}
+.mc-compass .needle-n {
+  color: var(--cat-emg);
+}
+.mc-compass .kaaba {
+  color: var(--ink);
+}
+.mc-compass:not(.is-rotated) .icon-btn {
+  color: var(--muted);
+}
+
+/* ---------- The map page ---------- */
+.map-page {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+/* MapLibre's stylesheet makes its container position: relative, so the size is given explicitly. */
+.map-root {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* As in the live app, whatever the language: zoom and rotation on the right (Leaflet's bottomright),
+   the other map buttons on the left (bottomleft). */
+.map-overlay {
+  position: absolute;
+  right: calc(var(--s-3) + env(safe-area-inset-right));
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  z-index: 2;
+}
+.map-overlay-left {
+  position: absolute;
+  left: calc(var(--s-3) + env(safe-area-inset-left));
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  z-index: 2;
+}
+/* MapLibre's own controls in the app's look; the credit line always readable. */
+/* The credit line reads left to right in every language (it is English). */
+.maplibregl-ctrl-attrib {
+  direction: ltr;
+  background: var(--panel) !important;
+  color: var(--ink) !important;
+  font: 500 10px/1.4 var(--font-ui) !important;
+  border-radius: 8px 8px 0 0;
+}
+.maplibregl-ctrl-attrib a {
+  color: var(--ink) !important;
+}
+/* «100 m» reads left to right in every language. */
+.maplibregl-ctrl-scale {
+  direction: ltr;
+  background: var(--panel) !important;
+  border-color: var(--ink) !important;
+  color: var(--ink) !important;
+  font: 500 10px var(--font-ui) !important;
+}

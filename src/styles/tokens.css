@@ -33,6 +33,8 @@
   --dir-north: #b03f66;
   --dir-east: #2a77b5;
   --women-area: rgb(236 79 154 / 0.18);
+  /* the same pink, solid: the map draws it with its own opacity */
+  --women-area-solid: #ec4f9a;
 
   /* routes */
   --route-walk: #17785a;
