@@ -177,7 +177,8 @@ Versions are pinned exactly (no `^`) and locked by `package-lock.json`. Only ver
 - Fonts use `font-display: swap`, with Arabic + Latin subsets precached and other scripts on demand.
 
 ## 8. Integration points (unchanged)
-- Deep links: `map.html?poi=<id>`, `?visit=<id>`, `?lib=<id>`, `?admin=1`, `?lang=<code>`.
+- Deep links: `map.html?poi=<id>`, `?visit=<id>`, `?lib=<id>`, `?admin=1` (asks for the supervisor password), `?lang=<code>`.
+- The supervisor's page: «ADMIN» typed in the search box offers it, then `ui/admin/AdminGate.tsx` asks for the password, checked against a SHA-256 in `state/admin.ts`. This hides the page; it is not protection, as the check runs in the browser. Changes stay on that device until a server exists.
 - Works inside a WebView: no cookies, no login, no server.
 - Plain JSON data with stable ids.
 - Site config lives in `src/config/site.config.ts`: site URL, QR, light tiles, organisation name.
