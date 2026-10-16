@@ -76,7 +76,7 @@ src/
     me.ts          visitor dot (one DOM marker), glide, heading cone; accuracy as a GPU circle layer
     camera.ts      fly/fit with safe insets for top bar and sheet; reduced motion
   app/            map-main.tsx (entry: engine, store → map effects, ?poi=) · App.tsx (everything over the map) · trip.ts (location on demand, plans, re-route, switch, way out, car park question, live navigation)
-  landing/        view.ts (pure) · main.ts
+  landing/        view.ts (pure HTML string, prerendered in Arabic at build) · main.ts (no framework: theme, language, copy/share/PNG, install) · qr.ts (ported) · landing.css
   styles/         tokens.css · base.css · …
   design/         /design gallery (dev only, never in the production build)
 tests/unit/  tests/e2e/  scripts/perf.mjs
@@ -113,6 +113,11 @@ tests/unit/  tests/e2e/  scripts/perf.mjs
   - Snapshots go to the `nav` signal, so the UI counters and the step banner update and `map/route.focus(ahead150)` follows.
   - Updating the "ahead" line is a `setData` on a ≤150 m line: tiny and bounded.
 - **Deep links (as built).** `map-main` reads `?poi=`, `?visit=`, `?lib=`, `?admin=1` once and hands them to `App` as props, opened when it mounts (events sent earlier were lost, phase 4).
+- **Landing and PWA (phase 7).** `vite.config.ts`:
+  - `prerenderLanding` writes the Arabic landing into index.html.
+  - `inlineCss` puts each page's CSS in its HTML.
+  - `VitePWA` precaches the shell (both pages, chunks, Arabic/Latin fonts), never map tiles or story photos.
+  - `app/pwa.ts` registers the service worker from each page; updates apply on the next visit.
 - **Lazy parts.** `App` loads the stories, the library and the admin panel with dynamic `import()` on first use; their CSS is imported by the component, so Vite splits it with them.
 - **Language.**
   - Changing the `lang` signal sets `<html lang/dir>`, and the UI re-renders.
