@@ -7,6 +7,8 @@ export default defineConfig({
   // Relative URLs so the build works on any host or sub-path.
   base: './',
   plugins: [tailwindcss()],
+  // Preact's automatic JSX runtime (tsconfig sets the same for type-checking).
+  oxc: { jsx: { runtime: 'automatic', importSource: 'preact' } },
   build: {
     target: 'es2020',
     rollupOptions: {
