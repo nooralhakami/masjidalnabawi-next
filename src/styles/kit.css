@@ -1631,3 +1631,16 @@
   margin: 0;
   color: var(--muted);
 }
+
+/* Tablet and desktop: the card, the search and the notices keep a phone's reading width, centred
+   (the live app's 600 px sheet); the map takes the rest. */
+@media (min-width: 700px) {
+  .map-page .sheet {
+    max-width: 600px;
+    margin-inline: auto;
+  }
+  .app-top .search {
+    width: min(600px, 100%);
+    margin-inline: auto;
+  }
+}

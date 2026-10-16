@@ -79,6 +79,16 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
 
   /** Open a place's card: the map flies to it when it was chosen from a list or a link (the live app's select()). */
   const [routing, setRouting] = useState(false);
+  // The navigation bar's height, so the notices sit above it.
+  const navHost = useRef<HTMLDivElement>(null);
+  const [navH, setNavH] = useState(0);
+  useEffect(() => {
+    const el = navHost.current;
+    if (!el) return setNavH(0);
+    const ro = new ResizeObserver(() => setNavH(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [!!(nav.value || garageQ.value)]);
   const [langOpen, setLangOpen] = useState(false);
   // The stories (at a site) and the library (at an entry, or the list) open full screen.
   const [stories, setStories] = useState<number | null>(null);
@@ -271,7 +281,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
       {nav.value || garageQ.value ? (
         // The car park question is a modal over the card, from the bottom of the screen (it is too
         // tall to sit above a half-open card on a short phone); the navigation bar sits above the sheet.
-        <div class={`nav-host${garageQ.value ? ' is-modal' : ''}`} style={{ '--sheet-h': `${place && !garageQ.value ? sheetH.value : 0}px` }}>
+        <div ref={navHost} class={`nav-host${garageQ.value ? ' is-modal' : ''}`} style={{ '--sheet-h': `${place && !garageQ.value ? sheetH.value : 0}px` }}>
           {garageQ.value ? (
             <GarageAsk key={garageQ.value.lots.map((l) => l.id).join()} lots={garageQ.value.lots} onAnswer={garageQ.value.answer} />
           ) : nav.value ? (
@@ -316,7 +326,8 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
           }}
         />
       ) : null}
-      <div class="toast-host" style={{ '--sheet-h': `${place ? sheetH.value : 0}px` }}>
+      {/* Notices rise above the navigation bar too, never on it. */}
+      <div class="toast-host" style={{ '--sheet-h': `${(place ? sheetH.value : 0) + (nav.value || garageQ.value ? navH + 12 : 0)}px` }}>
         {toast.value ? (
           <Toast key={toast.value.id} tone={toast.value.tone} icon={toast.value.tone === 'ok' ? 'check' : 'info'}>
             {toast.value.text}
