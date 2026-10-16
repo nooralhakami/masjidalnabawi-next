@@ -129,3 +129,12 @@ test.describe('translations, one file per language', () => {
     expect(files).toEqual(['tr.json']);
   });
 });
+
+test('no placeholder organisation name in the footer (owner: hidden until there is one)', async ({ page, errors: _ }) => {
+  await page.goto('./');
+  const footer = page.locator('.footer');
+  await expect(footer).toBeVisible();
+  await expect(footer).not.toContainText('ORG_NAME');
+  await expect(footer.locator('.nav-title')).toBeVisible();
+});
+

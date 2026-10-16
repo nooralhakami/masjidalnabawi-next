@@ -151,7 +151,7 @@ export function landingHtml(url: string): string {
   <footer class="footer">
     <div class="wrap footer-in">
       <div class="footer-top">
-        <div class="nav-brand">${brand(44)}<span class="nav-titles"><span class="nav-title">${e('title')}</span><span class="small on-dark-muted">${esc(SITE.ORG_NAME)}</span></span></div>
+        <div class="nav-brand">${brand(44)}<span class="nav-titles"><span class="nav-title">${e('title')}</span>${SITE.ORG_NAME ? `<span class="small on-dark-muted">${esc(SITE.ORG_NAME)}</span>` : ''}</span></div>
         <nav class="footer-langs" aria-label="${e('lang_title')}">${LANGS.map((c) => `<button type="button" data-lang="${c}" lang="${c}" aria-current="${c === l}">${esc(pack(c).n)}</button>`).join('')}</nav>
       </div>
       <hr />
