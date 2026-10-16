@@ -147,6 +147,7 @@ tests/unit/  tests/e2e/  scripts/perf.mjs
 - **Visitor dot.** One DOM marker, glide 900 ms ease-out.
   - The accuracy circle is a GeoJSON circle (fill).
   - The heading cone is compensated for bearing.
+- **Marker pop-in.** A new filter (or markers shown again) fades the marker layers in: opacity 0 for one frame, then a 200 ms paint transition back to 1 (`MapEngine.pop`, the live app's `.mk-pop`). Only on a tap, never during a gesture; skipped with reduced motion. The nine must-visit sites and the open card's pin do not fade.
 - **Gesture hygiene.**
   - Nothing toggles classes on `<body>` during gestures.
   - No `backdrop-filter`.
@@ -180,9 +181,10 @@ Versions are pinned exactly (no `^`) and locked by `package-lock.json`. Only ver
 - Works inside a WebView: no cookies, no login, no server.
 - Plain JSON data with stable ids.
 - Site config lives in `src/config/site.config.ts`: site URL, QR, light tiles, organisation name.
+- Hosting: static files from `dist/`. `vercel.json` sets the Vite build for a new, separate Vercel project, `sw.js` uncached and hashed assets immutable (README «النشر»).
 
 ## 9. Quality gates
 - `npm test`: Vitest, the ported unit tests + parity + new presentation, state and sheet-physics tests.
 - `npm run test:e2e`: Playwright on the production build at phone size. The live app's journeys are rewritten one by one (`docs/PARITY.md`).
 - `npm run build`: type-check + build.
-- `npm run perf`: main-thread budgets (SPEC §6); frame times on a real device.
+- `npm run perf`: main-thread budgets (SPEC §6); frame times on a real device (`docs/CHECKLIST.md`, step 11).
