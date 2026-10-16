@@ -170,6 +170,9 @@ Versions are pinned exactly (no `^`) and locked by `package-lock.json`. Only ver
   - `search` palette, on first focus.
   - `stories`, `library` and `admin`.
 - `i18n.json` (1.18 MB, all 26 languages) is split at build time into one file per language. Only the visitor's language loads; the tests keep reading the original file.
+  - As built (phase 8): the `splitI18n` plugin serves `data/i18n.json` and the four string modules of `src/i18n` with Arabic and English in full, plus name/short/dir for the other 24. Each of those becomes `i18n/<code>.json`.
+  - `src/i18n-next/load.ts` fetches the visitor's file and merges it into the packs `src/i18n` built, which `pack()` returns by reference.
+  - The page awaits this before its first draw, and again on a language change. The service worker precaches the 24 files.
 - Fonts use `font-display: swap`, with Arabic + Latin subsets precached and other scripts on demand.
 
 ## 8. Integration points (unchanged)
