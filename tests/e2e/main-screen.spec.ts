@@ -95,9 +95,9 @@ test.describe('search and card', () => {
     await expect(sheet(page).locator('.pc-title')).toContainText('215');
     await expect(sheet(page).locator('.pc-title')).toBeFocused();
     await expect(sheet(page).locator('.pc-alt')).toContainText('217');
-    // Half open, the card's footer sits over its lower part (as the live app): the sheet goes up to reach it.
-    await page.locator('.sheet-handle').click();
-    await expect(sheet(page)).toHaveClass(/is-full/);
+    // The alternative comes right after the chips (owner, 2026-10-16): tapped with the card half open.
+    await expect(sheet(page)).toHaveClass(/is-half/);
+    await expect(sheet(page).locator('.pc-alt button')).toBeInViewport({ ratio: 1 });
     await sheet(page).locator('.pc-alt button').click();
     await expect(sheet(page).locator('.pc-title')).toContainText('217');
     await sheet(page).getByRole('button', { name: 'إغلاق' }).click();

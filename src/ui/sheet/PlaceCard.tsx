@@ -99,6 +99,21 @@ export function PlaceCard({ p, fac, travel, level, onTravel, onLevel, onRoute, o
         {eb && !closed ? <Chip tone="info" icon="works">{t('elev')}</Chip> : null}
       </div>
 
+      {/* Closed: the nearest open one first, in view without dragging the sheet (owner, 2026-10-16). */}
+      {alt ? (
+        <div class="pc-alt">
+          <PlaceBadge p={alt.poi} size={40} />
+          <span class="pc-alt-text">
+            <span class="pc-alt-k">{t('alt_title')}</span>
+            <span class="pc-alt-n">{nm(alt.poi)}</span>
+            <span class="pc-alt-m">{t('alt_meta', { m: num(alt.meters), min: Math.max(1, Math.round(alt.meters / WALK_M_PER_MIN)) })}</span>
+          </span>
+          <Button variant="secondary" onClick={() => onGo(alt.poi)}>
+            {t('go')}
+          </Button>
+        </div>
+      ) : null}
+
       {status === 'works' || status === 'maintenance' ? (
         <div class="pc-notice" role="note">
           <div>
@@ -118,20 +133,6 @@ export function PlaceCard({ p, fac, travel, level, onTravel, onLevel, onRoute, o
         <div class="pc-note">
           <Icon name="link" size={18} />
           <span>{t('pair', { id: pair.id })}</span>
-        </div>
-      ) : null}
-
-      {alt ? (
-        <div class="pc-alt">
-          <PlaceBadge p={alt.poi} size={40} />
-          <span class="pc-alt-text">
-            <span class="pc-alt-k">{t('alt_title')}</span>
-            <span class="pc-alt-n">{nm(alt.poi)}</span>
-            <span class="pc-alt-m">{t('alt_meta', { m: num(alt.meters), min: Math.max(1, Math.round(alt.meters / WALK_M_PER_MIN)) })}</span>
-          </span>
-          <Button variant="secondary" onClick={() => onGo(alt.poi)}>
-            {t('go')}
-          </Button>
         </div>
       ) : null}
 
