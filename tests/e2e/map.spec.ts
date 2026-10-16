@@ -40,7 +40,7 @@ test.describe('markers: every place in its own spot, smaller when zoomed out (ow
         const e = (window as unknown as Win).__engine;
         const b = e.map.getBounds();
         const ids = new Set<number>();
-        for (const l of ['facilities', 'featured', 'parking', 'outer-dots', 'inner-dots']) for (const f of e.map.queryRenderedFeatures({ layers: [l] })) ids.add(Number(f.properties.id));
+        for (const l of ['facilities', 'facility-dots', 'mixed-dots', 'featured', 'parking', 'outer-dots', 'inner-dots']) for (const f of e.map.queryRenderedFeatures({ layers: [l] })) ids.add(Number(f.properties.id));
         const expected = (e.shownIds as number[]).filter((id) => {
           const p = e.poi(id);
           // Inner gates join from 17 under «All» (the live app's visibleAtZoom).
@@ -53,13 +53,14 @@ test.describe('markers: every place in its own spot, smaller when zoomed out (ow
     });
   }
 
-  test('plain dots up to 16, icon discs from 17 (the images the map asked for)', async ({ page, errors: _ }) => {
+  test('plain dots up to 16 (GPU circles; mixed restrooms as half-and-half images), icon discs from 17', async ({ page, errors: _ }) => {
     await openMap(page);
-    const images = () => page.evaluate(() => (window as unknown as Win).__engine.map.listImages() as string[]);
-    expect((await images()).some((i) => i.startsWith('dot:'))).toBe(true);
-    expect((await images()).some((i) => i.startsWith('fac:'))).toBe(false);
+    expect((await drawn(page, 'facility-dots')).length).toBeGreaterThan(50);
+    expect((await drawn(page, 'mixed-dots')).length).toBeGreaterThan(0);
+    expect(await drawn(page, 'facilities')).toEqual([]);
     await zoomTo(page, 17);
-    expect((await images()).some((i) => i.startsWith('fac:'))).toBe(true);
+    expect(await drawn(page, 'facility-dots')).toEqual([]);
+    expect((await drawn(page, 'facilities')).length).toBeGreaterThan(20);
   });
 
   test('outer-gate numbers from 17 (overlapping ones stay dots), inner-gate numbers at 19', async ({ page, errors: _ }) => {
@@ -131,14 +132,14 @@ test.describe('filters change layer filters, never the data', () => {
       const gates = e.allIds.filter((id: number) => e.poi(id).category === 'gates');
       e.setView({ ids: gates, filter: 'gates', withFeatured: true, hidden: false });
       await settle();
-      const withGates = { featured: ids('featured').length, facilities: ids('facilities').length, inner: ids('inner-dots').length };
+      const withGates = { featured: ids('featured').length, facilities: ids('facility-dots').length + ids('mixed-dots').length, inner: ids('inner-dots').length };
       // A search for one landmark: the must-visit badges go, the match is drawn as a plain marker.
       e.setView({ ids: [516], filter: 'all', withFeatured: false, hidden: false });
       await settle();
-      const searching = { featured: ids('featured').length, facilities: ids('facilities') };
+      const searching = { featured: ids('featured').length, facilities: [...ids('facility-dots'), ...ids('mixed-dots')] };
       e.setView({ ids: e.allIds, filter: 'all', withFeatured: true, hidden: true });
       await settle();
-      const hidden = ['facilities', 'featured', 'outer-dots', 'inner-dots', 'parking'].reduce((n, l) => n + ids(l).length, 0);
+      const hidden = ['facilities', 'facility-dots', 'mixed-dots', 'featured', 'outer-dots', 'inner-dots', 'parking'].reduce((n, l) => n + ids(l).length, 0);
       return { uploads, withGates, searching, hidden };
     });
     expect(r.uploads).toBe(0);

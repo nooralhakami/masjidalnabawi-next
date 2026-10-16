@@ -147,8 +147,9 @@ export class MapEngine {
             id: p.id,
             kind: look.kind,
             color: look.color,
-            // A must-visit site drawn as a plain facility while a search runs.
+            // A must-visit site drawn as a plain facility while a search runs: its own look and colour.
             look: plain.look,
+            pcolor: plain.color,
             icon: look.icon,
             featured: featured ? 1 : 0,
             closed: isClosed(this.opts.status(p.id)) ? 1 : 0,
@@ -211,16 +212,39 @@ export class MapEngine {
       source: 'pois',
       paint: { 'circle-radius': ['step', ['zoom'], 1.5, at(16), 3], 'circle-color': this.colorOf(['get', 'color']), 'circle-stroke-color': white, 'circle-stroke-width': ['step', ['zoom'], 0.75, at(16), 1] },
     });
-    // Facilities: a plain dot up to 16 (8 / 5 / 4 px), then the disc with its icon (14 px, 20 px at 19).
+    // Facilities up to 16: plain dots, 4 / 5 / 8 px with a white ring (1 / 1 / 1.5 px), drawn as GPU
+    // circles (no symbol placement, the cheapest layer there is). Mixed restrooms are half blue, half
+    // purple, which a circle cannot draw: those few stay images.
+    m.addLayer({
+      id: 'facility-dots',
+      type: 'circle',
+      source: 'pois',
+      maxzoom: at(ICON_FROM),
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], at(14), 2, at(15), 2.5, at(16), 4],
+        'circle-color': ['case', ['==', ['get', 'closed'], 1], this.palette.get('cat-gray'), this.colorOf(['get', 'pcolor'])],
+        'circle-stroke-color': white,
+        'circle-stroke-width': ['step', ['zoom'], 1, at(16), 1.5],
+      },
+    });
+    m.addLayer({
+      id: 'mixed-dots',
+      type: 'symbol',
+      source: 'pois',
+      maxzoom: at(ICON_FROM),
+      layout: { ...symbol, 'icon-image': this.img('dot:mixed:', ['to-string', ['get', 'closed']]), 'icon-size': ['interpolate', ['linear'], ['zoom'], at(14), 0.5, at(15), 0.625, at(16), 1] },
+    });
+    // From 17: the disc with its icon, 14 px (20 px at 19).
     m.addLayer({
       id: 'facilities',
       type: 'symbol',
       source: 'pois',
+      minzoom: at(ICON_FROM),
       layout: {
         ...symbol,
         'symbol-sort-key': ['get', 'z'],
-        'icon-image': ['step', ['zoom'], this.img('dot:', ['get', 'color'], ':', ['to-string', ['get', 'closed']]), at(ICON_FROM), this.img('fac:', ['get', 'look'], ':', ['to-string', ['get', 'closed']])],
-        'icon-size': ['interpolate', ['linear'], ['zoom'], at(14), 0.5, at(15), 0.625, at(16), 1, at(16) + 0.999, 1, at(17), 0.7, at(18), 0.7, at(19), 1],
+        'icon-image': this.img('fac:', ['get', 'look'], ':', ['to-string', ['get', 'closed']]),
+        'icon-size': ['interpolate', ['linear'], ['zoom'], at(17), 0.7, at(18), 0.7, at(19), 1],
       },
     });
     m.addLayer({
@@ -279,7 +303,8 @@ export class MapEngine {
     const ids: string[] = [];
     for (const f of this.features().features) {
       const p = f.properties as Record<string, string | number>;
-      if (p.kind === 'facility' || p.kind === 'featured') ids.push(`dot:${p.color}:${p.closed}@${v}`, `fac:${p.look}:${p.closed}@${v}`);
+      if (p.kind === 'facility' || p.kind === 'featured') ids.push(`fac:${p.look}:${p.closed}@${v}`);
+      if (p.pcolor === 'mixed') ids.push(`dot:mixed:${p.closed}@${v}`);
       if (p.kind === 'featured') ids.push(`feat:${p.icon}@${v}`);
       if (p.kind === 'gate-outer') ids.push(`gate:${p.id}@${v}`);
       if (p.kind === 'gate-inner') ids.push(`inum:${p.id}:${p.color}@${v}`);
@@ -304,7 +329,7 @@ export class MapEngine {
 
   /** A colour token on a feature, as a paint colour (read from tokens.css). */
   private colorOf(get: ExpressionSpecification): ExpressionSpecification {
-    const tokens = ['dir-south', 'dir-west', 'dir-north', 'dir-east', 'cat-women', 'cat-men'];
+    const tokens = ['dir-south', 'dir-west', 'dir-north', 'dir-east', 'cat-women', 'cat-men', 'cat-acc', 'cat-hotel', 'cat-food', 'cat-land', 'cat-emg', 'cat-shop', 'cat-hist', 'cat-park-sub', 'cat-gray'];
     return ['match', get, ...tokens.flatMap((t) => [t, this.palette.get(t)]), this.palette.get('cat-land')] as unknown as ExpressionSpecification;
   }
 
@@ -342,7 +367,11 @@ export class MapEngine {
     set('inner-numbers', kind('gate-inner'));
     set('gate-names', ['all', kind('gate-inner'), ['==', ['get', 'named'], 1]] as ExpressionSpecification);
     set('parking', kind('parking'));
-    set('facilities', ['any', kind('facility'), ['all', kind('featured'), ['!', featuredDrawn]]] as ExpressionSpecification);
+    const facility = ['any', kind('facility'), ['all', kind('featured'), ['!', featuredDrawn]]] as ExpressionSpecification;
+    const mixed = ['==', ['get', 'pcolor'], 'mixed'] as ExpressionSpecification;
+    set('facilities', facility);
+    set('facility-dots', ['all', facility, ['!', mixed]] as ExpressionSpecification);
+    set('mixed-dots', ['all', facility, mixed] as ExpressionSpecification);
     set('featured', ['all', kind('featured'), featuredDrawn] as ExpressionSpecification);
     // The number between a pair's two markers, only while both are on the map.
     const both = ['all', ['in', ['get', 'id'], ['literal', [...ids]]], ['in', ['get', 'b'], ['literal', [...ids]]]] as unknown as ExpressionSpecification;
@@ -363,7 +392,7 @@ export class MapEngine {
     this.version++;
     if (!this.map.getLayer('facilities')) return;
     this.map.removeLayer('featured');
-    for (const id of ['esri', 'light', 'women-fill', 'women-line', 'inner-dots', 'outer-dots', 'facilities', 'parking', 'outer-chips', 'inner-numbers', 'pairs', 'gate-names']) if (this.map.getLayer(id)) this.map.removeLayer(id);
+    for (const id of ['esri', 'light', 'women-fill', 'women-line', 'inner-dots', 'outer-dots', 'facility-dots', 'mixed-dots', 'facilities', 'parking', 'outer-chips', 'inner-numbers', 'pairs', 'gate-names']) if (this.map.getLayer(id)) this.map.removeLayer(id);
     for (const id of this.map.listImages()) if (id.endsWith(`@${old}`)) this.map.removeImage(id);
     this.addLayers();
     this.setBase(this.base);
@@ -416,7 +445,7 @@ export class MapEngine {
 
   /** The place under a tap: the nearest marker within 16 px (the live app's 32 px hit area). */
   private pick(x: number, y: number) {
-    const layers = ['featured', 'facilities', 'parking', 'outer-chips', 'inner-numbers', 'outer-dots', 'inner-dots'].filter((l) => this.map.getLayer(l));
+    const layers = ['featured', 'facilities', 'facility-dots', 'mixed-dots', 'parking', 'outer-chips', 'inner-numbers', 'outer-dots', 'inner-dots'].filter((l) => this.map.getLayer(l));
     const hits = this.map.queryRenderedFeatures(
       [
         [x - HIT_PX, y - HIT_PX],
