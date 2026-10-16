@@ -7,6 +7,7 @@ import { FILTERS, type FilterId, type ParkingSub, type ToiletSub } from '../doma
 import { visiblePois } from '../domain/visible';
 import { getLang, nm, pack, t } from '../i18n';
 import { applyLang } from '../i18n/dom';
+import { loadLang } from '../i18n-next/load';
 import type { MapEngine } from '../map/engine';
 import { isClosed } from '../domain/facilities';
 import { filter, garageQ, level, markersHidden, nav, notify, parkingSub, query, rawdahH, route, selected, sheet, sheetH, toast, toiletSub, travel, typed } from '../state/store';
@@ -208,7 +209,8 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
             onPick={(l) => {
               setLangOpen(false);
               // The whole page follows (map-main redraws the UI and the map's labels).
-              if (l !== lang) applyLang(l);
+              // Its texts first (their own file), then the whole page follows.
+              if (l !== lang) void loadLang(l).then(() => applyLang(l));
             }}
           />
         ) : null}

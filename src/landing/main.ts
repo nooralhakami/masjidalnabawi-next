@@ -5,6 +5,7 @@ import { SITE } from '../config/site.config';
 import type { LangCode } from '../data/types';
 import { getLang, t } from '../i18n';
 import { applyLang, initialLang } from '../i18n/dom';
+import { loadLang } from '../i18n-next/load';
 import { applyTheme, currentTheme, savedTheme } from '../ui/theme';
 import { imageToPng, mapUrl, qrPng, qrSvg } from './qr';
 import { landingHtml } from './view';
@@ -100,8 +101,11 @@ function bind(): void {
   });
   document.querySelectorAll<HTMLElement>('[data-lang]').forEach((b) =>
     b.addEventListener('click', () => {
-      applyLang(b.dataset.lang as LangCode);
-      document.getElementById('lang-btn')?.focus();
+      const l = b.dataset.lang as LangCode;
+      void loadLang(l).then(() => {
+        applyLang(l);
+        document.getElementById('lang-btn')?.focus();
+      });
     }),
   );
 
@@ -167,8 +171,12 @@ addEventListener('appinstalled', () => {
 
 // Dark by default on the landing page (as the live app); a visitor's choice is remembered and shared with the map.
 applyTheme(savedTheme() ?? 'dark', false);
-applyLang(initialLang());
-render();
-document.addEventListener('langchange', render);
+// The prerendered Arabic page is already on screen; another language re-renders once its texts arrive.
+const first = initialLang();
+void loadLang(first).then(() => {
+  applyLang(first);
+  render();
+  document.addEventListener('langchange', render);
+});
 
 initPwa();

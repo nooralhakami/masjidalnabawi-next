@@ -70,12 +70,73 @@ function inlineCss(): Plugin {
   };
 }
 
+/** Languages every page carries in full: the fallbacks of t(), and English names are searched in any language. */
+const BASE_LANGS = ['ar', 'en'];
+const STRING_MODULES: Record<string, string> = {
+  '/src/i18n/strings.ts': 'EXTRA_UI',
+  '/src/i18n/landing-strings.ts': 'LANDING_UI',
+  '/src/i18n/stories-strings.ts': 'STORIES_UI',
+  '/src/i18n/library-strings.ts': 'LIBRARY_UI',
+};
+
+/**
+ * One translation file per language (ARCHITECTURE §7). src/i18n is ported verbatim and stays
+ * untouched: at build, its data modules are served with Arabic and English in full and, for the 24
+ * others, only what the language menu shows (name, short code, direction); each of those ships as
+ * i18n/<code>.json, which src/i18n-next/load.ts fetches and merges into the same packs before the
+ * page uses them. Dev and the tests keep the full data.
+ */
+function splitI18n(): Plugin {
+  let full: Record<string, Record<string, unknown> & { ui: Record<string, string> }> = {};
+  const strings: Record<string, Record<string, Record<string, string>>> = {};
+  return {
+    name: 'split-i18n',
+    apply: 'build',
+    enforce: 'pre',
+    async buildStart() {
+      full = JSON.parse(readFileSync(resolve(import.meta.dirname, 'data/i18n.json'), 'utf8'));
+      const server = await createServer({ configFile: false, oxc: OXC, logLevel: 'silent', server: { middlewareMode: true }, appType: 'custom' });
+      try {
+        for (const [file, name] of Object.entries(STRING_MODULES)) strings[name] = (await server.ssrLoadModule(file))[name];
+      } finally {
+        await server.close();
+      }
+    },
+    load(id, opts) {
+      if (opts?.ssr) return null;
+      const path = id.split('?')[0];
+      if (path.endsWith('/data/i18n.json')) {
+        const stub = Object.fromEntries(
+          Object.entries(full).map(([l, p]) => [l, BASE_LANGS.includes(l) ? p : { n: p.n, short: p.short, dir: p.dir, ui: {} }]),
+        );
+        // Still JSON: Vite's own JSON plugin turns it into a module afterwards.
+        return JSON.stringify(stub);
+      }
+      for (const [file, name] of Object.entries(STRING_MODULES))
+        if (path.endsWith(file)) {
+          const kept = Object.fromEntries(Object.entries(strings[name]).map(([l, ui]) => [l, BASE_LANGS.includes(l) ? ui : {}]));
+          return `export const ${name} = ${JSON.stringify(kept)};`;
+        }
+      return null;
+    },
+    generateBundle() {
+      for (const [l, p] of Object.entries(full)) {
+        if (BASE_LANGS.includes(l)) continue;
+        // The same merge order as src/i18n/index.ts builds its packs.
+        const ui = { ...p.ui, ...strings.EXTRA_UI[l], ...strings.LANDING_UI[l], ...strings.STORIES_UI[l], ...strings.LIBRARY_UI[l] };
+        this.emitFile({ type: 'asset', fileName: `i18n/${l}.json`, source: JSON.stringify({ pack: { ...p, ui: undefined }, ui }) });
+      }
+    },
+  };
+}
+
 export default defineConfig({
   // Relative URLs so the build works on any host or sub-path.
   base: './',
   define: DEFINE,
   plugins: [
     tailwindcss(),
+    splitI18n(),
     prerenderLanding(),
     inlineCss(),
     VitePWA({
@@ -106,7 +167,8 @@ export default defineConfig({
       },
       workbox: {
         // App shell, its lazy parts, the map's worker and the fonts (Arabic and Latin subsets only).
-        globPatterns: ['**/*.{html,js,mjs,css,jpg,webp}', 'icons/icon.svg', 'icons/apple-touch-icon.png', 'assets/*-{arabic,latin}-*.woff2'],
+        // The 24 translation files too, so a language chosen offline (after one visit) still has its texts.
+        globPatterns: ['**/*.{html,js,mjs,css,jpg,webp}', 'i18n/*.json', 'icons/icon.svg', 'icons/apple-touch-icon.png', 'assets/*-{arabic,latin}-*.woff2'],
         // Landmark photos (public/visits/) load on demand; the design gallery is not part of the app.
         globIgnores: ['visits/**', 'design.html', '**/*-cyrillic*', '**/*-greek*', '**/*-vietnamese*', '**/*-math-*', '**/*-symbols-*'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,

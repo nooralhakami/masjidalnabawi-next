@@ -107,3 +107,25 @@ test.describe('PWA', () => {
     errors.splice(0, errors.length, ...rest);
   });
 });
+
+test.describe('translations, one file per language', () => {
+  const watch = (page: import('@playwright/test').Page) => {
+    const files: string[] = [];
+    page.on('request', (r) => /\/i18n\/\w+\.json$/.test(r.url()) && files.push(r.url().split('/').pop()!));
+    return files;
+  };
+
+  test('in Arabic no translation file is fetched (Arabic and English ship with the page)', async ({ page, errors: _ }) => {
+    const files = watch(page);
+    await openMap(page, 'ar');
+    expect(files).toEqual([]);
+  });
+
+  test('in Turkish only its own file is fetched, before the page shows Turkish', async ({ page, errors: _ }) => {
+    const files = watch(page);
+    await openMap(page, 'tr');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'tr');
+    await expect(page.locator('.cat-row .cat-btn').first()).toContainText('Tümü');
+    expect(files).toEqual(['tr.json']);
+  });
+});

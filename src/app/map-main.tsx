@@ -15,6 +15,7 @@ import { VISIT_LIST } from '../domain/visits';
 import { currentWeather, WEATHER_TTL_MS, type Weather } from '../domain/weather';
 import { getLang, nm, t } from '../i18n';
 import { applyLang, initialLang } from '../i18n/dom';
+import { loadLang } from '../i18n-next/load';
 import { MapEngine, type BaseLayer } from '../map/engine';
 import { filter, markersHidden, nav, parkingSub, query, rawdahH, searching, selected, sheetH, toiletSub } from '../state/store';
 import { LangContext } from '../ui/i18n';
@@ -26,8 +27,9 @@ import { initPwa } from './pwa';
 import { Trip } from './trip';
 
 applyTheme(savedTheme(), false);
-applyLang(initialLang());
-document.title = t('title');
+// The visitor's language: its texts arrive (their own file) before anything is drawn, in main().
+const firstLang = initialLang();
+document.documentElement.lang = firstLang;
 
 const root = document.getElementById('app')!;
 root.innerHTML =
@@ -36,6 +38,9 @@ root.innerHTML =
 const fac = new Facilities();
 
 async function main() {
+  await loadLang(firstLang);
+  applyLang(firstLang);
+  document.title = t('title');
   const engine = await MapEngine.create({
     container: document.getElementById('map')!,
     nameOf: (p) => nm(p),
