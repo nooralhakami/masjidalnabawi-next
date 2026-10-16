@@ -55,5 +55,14 @@ export async function drawn(page: Page, layer: string): Promise<number[]> {
 
 /** Resolves when the map's next movement (zoom, turn, pan) has ended: start it before the click. */
 export function moved(page: Page): Promise<void> {
-  return page.evaluate(() => new Promise<void>((r) => (window as any).__engine.map.once('moveend', () => r())));
+  // A flag polled from the test, not a promise awaited in the page: awaiting one, the browser
+  // reported it «garbage collected» now and then under load.
+  return page
+    .evaluate(() => {
+      const w = window as any;
+      w.__moved = false;
+      w.__engine.map.once('moveend', () => (w.__moved = true));
+    })
+    .then(() => page.waitForFunction(() => (window as any).__moved === true))
+    .then(() => undefined);
 }

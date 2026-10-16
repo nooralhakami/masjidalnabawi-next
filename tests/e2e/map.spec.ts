@@ -184,7 +184,7 @@ test.describe('map buttons', () => {
     expect(await page.evaluate(() => (window as unknown as Win).__engine.legacyZoom)).toBeCloseTo(17, 1);
     const vis = () => page.evaluate(() => ['esri', 'light'].map((l) => (window as unknown as Win).__engine.map.getLayoutProperty(l, 'visibility') ?? 'visible'));
     expect(await vis()).toEqual(['visible', 'none']);
-    const layers = page.locator('.map-overlay-left .icon-btn');
+    const layers = page.locator('.map-overlay-left .icon-btn').first();
     const before = await layers.getAttribute('aria-label');
     await layers.click();
     expect(await vis()).toEqual(['none', 'visible']);
@@ -221,7 +221,8 @@ test.describe('language and theme', () => {
     await idle(page);
     const images = await page.evaluate(() => (window as unknown as Win).__engine.map.listImages() as string[]);
     expect(images.length).toBeGreaterThan(0);
-    expect(images.every((i) => i.endsWith('@2'))).toBe(true);
+    // The marker images (the route's own are versioned apart, map/route.ts).
+    expect(images.filter((i) => !i.startsWith('rt')).every((i) => i.endsWith('@2'))).toBe(true);
     expect((await drawn(page, 'facilities')).length).toBeGreaterThan(0);
   });
 });

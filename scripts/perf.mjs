@@ -83,6 +83,17 @@ async function main() {
     await page.waitForFunction(() => window.__engine?.map?.loaded() && window.__engine.map.getLayer('facilities'));
     // 'idle' fires once the map is settled; ask for one more frame so it fires even if it already is.
     await page.evaluate(() => new Promise((r) => (window.__engine.map.once('idle', r), window.__engine.map.triggerRepaint())));
+    // PERF_ROUTE=1: measure while a walking route is drawn and followed (phase 5: the route's layers
+    // exist only then), from the west plaza to restroom 204, the live app's e2e trip.
+    if (process.env.PERF_ROUTE && !query.includes('layers=base')) {
+      await context.grantPermissions(['geolocation']);
+      await context.setGeolocation({ latitude: 24.4685, longitude: 39.6084, accuracy: 15 });
+      await page.evaluate(() => document.dispatchEvent(new CustomEvent('open-place', { detail: window.__engine.poi(204) })));
+      await page.locator('.pc-actions .btn-block').click();
+      await page.locator('.route-card').waitFor({ timeout: 30_000 });
+      await page.waitForTimeout(1500);
+      log('route drawn');
+    }
     await page.waitForTimeout(800);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: THROTTLE });
     log('throttled');

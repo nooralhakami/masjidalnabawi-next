@@ -95,6 +95,9 @@ test.describe('search and card', () => {
     await expect(sheet(page).locator('.pc-title')).toContainText('215');
     await expect(sheet(page).locator('.pc-title')).toBeFocused();
     await expect(sheet(page).locator('.pc-alt')).toContainText('217');
+    // Half open, the card's footer sits over its lower part (as the live app): the sheet goes up to reach it.
+    await page.locator('.sheet-handle').click();
+    await expect(sheet(page)).toHaveClass(/is-full/);
     await sheet(page).locator('.pc-alt button').click();
     await expect(sheet(page).locator('.pc-title')).toContainText('217');
     await sheet(page).getByRole('button', { name: 'إغلاق' }).click();
