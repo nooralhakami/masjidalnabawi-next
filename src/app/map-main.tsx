@@ -21,6 +21,7 @@ import { filter, markersHidden, nav, parkingSub, query, rawdahH, searching, sele
 import { LangContext } from '../ui/i18n';
 import { MapControls, MapTools } from '../ui/shell/MapControls';
 import { WeatherChip } from '../ui/shell/WeatherChip';
+import { MapError } from '../ui/shell/MapError';
 import { applyTheme, savedTheme } from '../ui/theme';
 import { App } from './App';
 import { initPwa } from './pwa';
@@ -41,14 +42,26 @@ async function main() {
   await loadLang(firstLang);
   applyLang(firstLang);
   document.title = t('title');
-  const engine = await MapEngine.create({
-    container: document.getElementById('map')!,
-    nameOf: (p) => nm(p),
-    status: (id) => fac.status(id),
-    onPick: (id) => document.dispatchEvent(new CustomEvent('map-tap', { detail: id })),
-    routeText: { minutes: (m) => t('r_min', { t: m }), level: (l) => t('lvl_name', { l }), entrance: (p) => nm(p) },
-    meLabel: () => t('you'),
-  });
+  let engine: MapEngine;
+  try {
+    engine = await MapEngine.create({
+      container: document.getElementById('map')!,
+      nameOf: (p) => nm(p),
+      status: (id) => fac.status(id),
+      onPick: (id) => document.dispatchEvent(new CustomEvent('map-tap', { detail: id })),
+      routeText: { minutes: (m) => t('r_min', { t: m }), level: (l) => t('lvl_name', { l }), entrance: (p) => nm(p) },
+      meLabel: () => t('you'),
+    });
+  } catch {
+    // No map on this device (no WebGL, or refused): say so instead of a blank page.
+    render(
+      <LangContext.Provider value={getLang()}>
+        <MapError onRetry={() => location.reload()} />
+      </LangContext.Provider>,
+      document.getElementById('ui')!,
+    );
+    return;
+  }
 
   const trip = new Trip(engine, {
     top: () => document.querySelector('.app-top')?.getBoundingClientRect().bottom ?? 0,

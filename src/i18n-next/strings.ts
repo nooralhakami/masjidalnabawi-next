@@ -1,4 +1,5 @@
 import type { LangCode } from '../data/types';
+import { getLang, t } from '../i18n';
 
 /**
  * Interface texts added by «next» (the ported src/i18n stays byte for byte as the live app's).
@@ -6,32 +7,32 @@ import type { LangCode } from '../data/types';
  * First-pass translations (2026-10-16): they need a native speaker's review, as the live app's did.
  */
 export const NEXT_UI: Record<LangCode, Record<string, string>> = {
-  ar: { recent_title: 'عمليات البحث الأخيرة', recent_clear: 'مسح' },
-  en: { recent_title: 'Recent searches', recent_clear: 'Clear' },
-  tr: { recent_title: 'Son aramalar', recent_clear: 'Temizle' },
-  ur: { recent_title: 'حالیہ تلاشیں', recent_clear: 'صاف کریں' },
-  id: { recent_title: 'Pencarian terakhir', recent_clear: 'Hapus' },
-  uz: { recent_title: 'Soʻnggi qidiruvlar', recent_clear: 'Tozalash' },
-  bn: { recent_title: 'সাম্প্রতিক অনুসন্ধান', recent_clear: 'মুছুন' },
-  fr: { recent_title: 'Recherches récentes', recent_clear: 'Effacer' },
-  fa: { recent_title: 'جستجوهای اخیر', recent_clear: 'پاک کردن' },
-  ru: { recent_title: 'Недавние запросы', recent_clear: 'Очистить' },
-  ms: { recent_title: 'Carian terkini', recent_clear: 'Kosongkan' },
-  ha: { recent_title: 'Binciken kwanan nan', recent_clear: 'Share' },
-  ml: { recent_title: 'സമീപകാല തിരയലുകൾ', recent_clear: 'മായ്ക്കുക' },
-  sw: { recent_title: 'Utafutaji wa hivi karibuni', recent_clear: 'Futa' },
-  ps: { recent_title: 'وروستي لټونونه', recent_clear: 'پاکول' },
-  so: { recent_title: 'Raadintii u dambeysay', recent_clear: 'Tirtir' },
-  ta: { recent_title: 'சமீபத்திய தேடல்கள்', recent_clear: 'அழி' },
-  hi: { recent_title: 'हाल की खोजें', recent_clear: 'मिटाएँ' },
-  bs: { recent_title: 'Nedavne pretrage', recent_clear: 'Obriši' },
-  de: { recent_title: 'Letzte Suchen', recent_clear: 'Löschen' },
-  zh: { recent_title: '最近搜索', recent_clear: '清除' },
-  am: { recent_title: 'የቅርብ ጊዜ ፍለጋዎች', recent_clear: 'አጽዳ' },
-  ku: { recent_title: 'Lêgerînên dawî', recent_clear: 'Paqij bike' },
-  az: { recent_title: 'Son axtarışlar', recent_clear: 'Təmizlə' },
-  th: { recent_title: 'การค้นหาล่าสุด', recent_clear: 'ล้าง' },
-  es: { recent_title: 'Búsquedas recientes', recent_clear: 'Borrar' },
+  ar: { recent_title: 'عمليات البحث الأخيرة', recent_clear: 'مسح', map_fail: 'تعذّر عرض الخريطة على هذا الجهاز', retry: 'إعادة المحاولة', route_none: 'لم نجد طريقاً إلى هذا المكان من موقعك' },
+  en: { recent_title: 'Recent searches', recent_clear: 'Clear', map_fail: 'The map could not be shown on this device', retry: 'Try again', route_none: 'No route found to this place from where you are' },
+  tr: { recent_title: 'Son aramalar', recent_clear: 'Temizle', map_fail: 'Harita bu cihazda gösterilemedi', retry: 'Tekrar dene', route_none: 'Bulunduğunuz yerden buraya bir yol bulunamadı' },
+  ur: { recent_title: 'حالیہ تلاشیں', recent_clear: 'صاف کریں', map_fail: 'اس آلے پر نقشہ نہیں دکھایا جا سکا', retry: 'دوبارہ کوشش کریں', route_none: 'آپ کے مقام سے اس جگہ تک کوئی راستہ نہیں ملا' },
+  id: { recent_title: 'Pencarian terakhir', recent_clear: 'Hapus', map_fail: 'Peta tidak dapat ditampilkan di perangkat ini', retry: 'Coba lagi', route_none: 'Tidak ada rute ke tempat ini dari lokasi Anda' },
+  uz: { recent_title: 'Soʻnggi qidiruvlar', recent_clear: 'Tozalash', map_fail: 'Xaritani bu qurilmada koʻrsatib boʻlmadi', retry: 'Qayta urinish', route_none: 'Joylashuvingizdan bu yerga yoʻl topilmadi' },
+  bn: { recent_title: 'সাম্প্রতিক অনুসন্ধান', recent_clear: 'মুছুন', map_fail: 'এই ডিভাইসে মানচিত্র দেখানো যায়নি', retry: 'আবার চেষ্টা করুন', route_none: 'আপনার অবস্থান থেকে এখানে কোনো পথ পাওয়া যায়নি' },
+  fr: { recent_title: 'Recherches récentes', recent_clear: 'Effacer', map_fail: 'La carte n’a pas pu s’afficher sur cet appareil', retry: 'Réessayer', route_none: 'Aucun itinéraire trouvé vers ce lieu depuis votre position' },
+  fa: { recent_title: 'جستجوهای اخیر', recent_clear: 'پاک کردن', map_fail: 'نقشه در این دستگاه نمایش داده نشد', retry: 'تلاش دوباره', route_none: 'از موقعیت شما راهی به این مکان پیدا نشد' },
+  ru: { recent_title: 'Недавние запросы', recent_clear: 'Очистить', map_fail: 'Не удалось показать карту на этом устройстве', retry: 'Повторить', route_none: 'Маршрут от вашего местоположения не найден' },
+  ms: { recent_title: 'Carian terkini', recent_clear: 'Kosongkan', map_fail: 'Peta tidak dapat dipaparkan pada peranti ini', retry: 'Cuba lagi', route_none: 'Tiada laluan ke tempat ini dari lokasi anda' },
+  ha: { recent_title: 'Binciken kwanan nan', recent_clear: 'Share', map_fail: 'Ba a iya nuna taswira a wannan na’ura ba', retry: 'Sake gwadawa', route_none: 'Ba a sami hanya zuwa wannan wuri daga inda kake ba' },
+  ml: { recent_title: 'സമീപകാല തിരയലുകൾ', recent_clear: 'മായ്ക്കുക', map_fail: 'ഈ ഉപകരണത്തിൽ മാപ്പ് കാണിക്കാനായില്ല', retry: 'വീണ്ടും ശ്രമിക്കുക', route_none: 'നിങ്ങളുടെ സ്ഥാനത്തുനിന്ന് ഇവിടേക്ക് വഴി കണ്ടെത്തിയില്ല' },
+  sw: { recent_title: 'Utafutaji wa hivi karibuni', recent_clear: 'Futa', map_fail: 'Ramani haikuweza kuonyeshwa kwenye kifaa hiki', retry: 'Jaribu tena', route_none: 'Hakuna njia iliyopatikana kwenda mahali hapa kutoka ulipo' },
+  ps: { recent_title: 'وروستي لټونونه', recent_clear: 'پاکول', map_fail: 'نقشه په دې وسیله کې ونه ښودل شوه', retry: 'بیا هڅه وکړئ', route_none: 'ستاسو له ځای څخه دې ځای ته لاره ونه موندل شوه' },
+  so: { recent_title: 'Raadintii u dambeysay', recent_clear: 'Tirtir', map_fail: 'Khariidadda lagama muujin karin qalabkan', retry: 'Isku day mar kale', route_none: 'Waddo looma helin meeshan laga bilaabo halka aad joogto' },
+  ta: { recent_title: 'சமீபத்திய தேடல்கள்', recent_clear: 'அழி', map_fail: 'இந்தச் சாதனத்தில் வரைபடத்தைக் காட்ட முடியவில்லை', retry: 'மீண்டும் முயலவும்', route_none: 'உங்கள் இடத்திலிருந்து இங்கு வழி கிடைக்கவில்லை' },
+  hi: { recent_title: 'हाल की खोजें', recent_clear: 'मिटाएँ', map_fail: 'इस डिवाइस पर नक्शा नहीं दिखाया जा सका', retry: 'फिर से कोशिश करें', route_none: 'आपकी जगह से यहाँ तक कोई रास्ता नहीं मिला' },
+  bs: { recent_title: 'Nedavne pretrage', recent_clear: 'Obriši', map_fail: 'Mapa se nije mogla prikazati na ovom uređaju', retry: 'Pokušaj ponovo', route_none: 'Nije pronađen put do ovog mjesta s vaše lokacije' },
+  de: { recent_title: 'Letzte Suchen', recent_clear: 'Löschen', map_fail: 'Die Karte konnte auf diesem Gerät nicht angezeigt werden', retry: 'Erneut versuchen', route_none: 'Kein Weg von Ihrem Standort zu diesem Ort gefunden' },
+  zh: { recent_title: '最近搜索', recent_clear: '清除', map_fail: '无法在此设备上显示地图', retry: '重试', route_none: '未找到从您所在位置到此处的路线' },
+  am: { recent_title: 'የቅርብ ጊዜ ፍለጋዎች', recent_clear: 'አጽዳ', map_fail: 'ካርታው በዚህ መሣሪያ ላይ ሊታይ አልቻለም', retry: 'እንደገና ሞክር', route_none: 'ከአሉበት ቦታ ወደዚህ መንገድ አልተገኘም' },
+  ku: { recent_title: 'Lêgerînên dawî', recent_clear: 'Paqij bike', map_fail: 'Nexşe li ser vê amûrê nehat nîşandan', retry: 'Dîsa biceribîne', route_none: 'Ji cihê te heta vir rê nehat dîtin' },
+  az: { recent_title: 'Son axtarışlar', recent_clear: 'Təmizlə', map_fail: 'Xəritə bu cihazda göstərilə bilmədi', retry: 'Yenidən cəhd et', route_none: 'Olduğunuz yerdən buraya yol tapılmadı' },
+  th: { recent_title: 'การค้นหาล่าสุด', recent_clear: 'ล้าง', map_fail: 'ไม่สามารถแสดงแผนที่บนอุปกรณ์นี้ได้', retry: 'ลองอีกครั้ง', route_none: 'ไม่พบเส้นทางจากตำแหน่งของคุณมายังที่นี่' },
+  es: { recent_title: 'Búsquedas recientes', recent_clear: 'Borrar', map_fail: 'No se pudo mostrar el mapa en este dispositivo', retry: 'Reintentar', route_none: 'No se encontró una ruta hasta aquí desde tu ubicación' },
 };
 
 /**
@@ -39,3 +40,10 @@ export const NEXT_UI: Record<LangCode, Record<string, string>> = {
  * beside it, key st_pray_meaning), word for word as in the live app's ui/stories.ts.
  */
 export const SALAWAT_AR = 'اللهم صل وسلم على نبينا محمد';
+
+/** A text from «next» in the current language (or the live app's, for its own keys): for code outside components. */
+export function tNext(key: string, vars?: Record<string, string | number>): string {
+  const v = NEXT_UI[getLang()]?.[key] ?? NEXT_UI.en[key];
+  if (v === undefined) return t(key, vars);
+  return vars ? v.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m)) : v;
+}

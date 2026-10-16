@@ -1,6 +1,7 @@
 import { POI_BY_ID } from '../data';
 import type { LatLng, Poi } from '../data/types';
 import { t } from '../i18n';
+import { tNext } from '../i18n-next/strings';
 import { LocationService } from '../location/LocationService';
 import { RouteTrack } from '../location/progress';
 import type { MapEngine } from '../map/engine';
@@ -38,6 +39,8 @@ export class Trip {
   private plans: Plan[] = [];
   private chosen = 0;
   private garageAnswer: { start: GarageStart; at: number; pos: LatLng } | null = null;
+  /** The route planner (routing/plan.ts); a test can put one that finds nothing. */
+  planner = planRoutes;
 
   constructor(
     private engine: MapEngine,
@@ -115,8 +118,13 @@ export class Trip {
     const mode = travel.value;
     const start = mode === 'drive' ? await this.garageStartFor(fix.lat, fix.lng) : undefined;
     if (start === null || selected.value !== p.id) return;
-    const next = await planRoutes([fix.lat, fix.lng], p, mode, { level: level.value, start });
-    if (selected.value !== p.id || !next.length) return;
+    const next = await this.planner([fix.lat, fix.lng], p, mode, { level: level.value, start });
+    if (selected.value !== p.id) return;
+    if (!next.length) {
+      // Said, not silent: the button stops spinning and nothing is drawn.
+      notify(tNext('route_none'), 'error');
+      return;
+    }
     if (mode === 'drive' && next[0].mode === 'walk') notify(t('drive_fallback'), 'info', 5000);
     const info = this.showPlans(next, 0, true);
     await this.tracker.start(next[0].mode);
