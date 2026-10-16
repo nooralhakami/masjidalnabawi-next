@@ -33,3 +33,9 @@ export const NEXT_UI: Record<LangCode, Record<string, string>> = {
   th: { recent_title: 'การค้นหาล่าสุด', recent_clear: 'ล้าง' },
   es: { recent_title: 'Búsquedas recientes', recent_clear: 'Borrar' },
 };
+
+/**
+ * The prayer on the Prophet ﷺ in the stories: Arabic in every language (the meaning is translated
+ * beside it, key st_pray_meaning), word for word as in the live app's ui/stories.ts.
+ */
+export const SALAWAT_AR = 'اللهم صل وسلم على نبينا محمد';
