@@ -184,7 +184,7 @@ test.describe('map buttons', () => {
     expect(await page.evaluate(() => (window as unknown as Win).__engine.legacyZoom)).toBeCloseTo(17, 1);
     const vis = () => page.evaluate(() => ['esri', 'light'].map((l) => (window as unknown as Win).__engine.map.getLayoutProperty(l, 'visibility') ?? 'visible'));
     expect(await vis()).toEqual(['visible', 'none']);
-    const layers = page.locator('.map-overlay-left .icon-btn').first();
+    const layers = page.locator('.mc-layers');
     const before = await layers.getAttribute('aria-label');
     await layers.click();
     expect(await vis()).toEqual(['none', 'visible']);
