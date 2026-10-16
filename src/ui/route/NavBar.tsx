@@ -1,6 +1,6 @@
-import { num } from '../../i18n';
 import { STATE_LABEL, navKnown, type NavView } from '../../presentation/route-view';
 import { Button } from '../kit/Button';
+import { Count } from '../kit/Count';
 import { Icon } from '../kit/Icon';
 import { useI18n } from '../i18n';
 import { StepBanner } from '../sheet/StepBanner';
@@ -49,11 +49,11 @@ export function NavBar({ s, level, onFollow, onEnd, onKeep }: NavBarProps) {
         {known ? (
           <span class="nav-counts">
             <span class="nav-big">
-              {num(s.remainingMinutes)}
+              <Count value={s.remainingMinutes} />
               <small> {t('dur_m', { m: '' }).trim()}</small>
             </span>
             <span class="nav-big nav-m">
-              {num(Math.round(s.remainingMeters / 5) * 5)}
+              <Count value={Math.round(s.remainingMeters / 5) * 5} />
               <small> {t('meters', { m: '' }).trim()}</small>
             </span>
           </span>
