@@ -1,28 +1,15 @@
-import type { Category, Poi } from '../../data/types';
+import type { Poi } from '../../data/types';
 import { elevatorBadge, isClosed, pairOf, type Facilities } from '../../domain/facilities';
 import { nearestOuterGate } from '../../domain/nearby';
 import { rawdahState } from '../../domain/rawdah';
 import { num } from '../../i18n';
 import { lookOf } from '../../presentation/markers';
+import { kindLabel } from '../../presentation/search-view';
 import { Button, IconButton } from '../kit/Button';
 import { Chip } from '../kit/Chip';
 import { Icon } from '../kit/Icon';
 import { FloorSwitch, TravelToggle, type Level, type Travel } from '../kit/TravelToggle';
 import { useI18n } from '../i18n';
-
-/** Category name above a place's title: the filter pill labels, already in every language (as in the live app). */
-const CATEGORY_LABEL: Record<Category, string> = {
-  gates: 'p_gates',
-  toilets: 'p_toilets',
-  parking: 'p_parking',
-  landmarks: 'p_landmarks',
-  wheelchair: 'p_wheelchair',
-  emergency: 'p_emergency',
-  women: 'p_women',
-  hotels: 'p_hotels',
-  food: 'p_food',
-  shopping: 'p_shopping',
-};
 
 const WALK_M_PER_MIN = 80;
 
@@ -79,7 +66,7 @@ export function PlaceCard({ p, fac, travel, level, onTravel, onLevel, onRoute, o
       <header class="pc-head" data-sheet-drag>
         <PlaceBadge p={p} closed={closed} />
         <div class="pc-titles">
-          <div class="pc-kicker">{t(p.subCategory === 'historic' ? 'p_historic' : CATEGORY_LABEL[p.category])}</div>
+          <div class="pc-kicker">{t(kindLabel(p))}</div>
           <h2 class="pc-title" tabIndex={-1}>
             {nm(p)}
           </h2>

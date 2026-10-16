@@ -409,7 +409,8 @@
   font-size: var(--fs-sm);
 }
 .search-panel {
-  max-height: min(60vh, 420px);
+  /* Room for the 8 results of a search on a phone (the live app shows them all), the top bar above. */
+  max-height: calc(100dvh - 96px);
   overflow: auto;
   border-radius: var(--r-card);
   background: var(--surface);
@@ -977,4 +978,92 @@
   border-color: var(--ink) !important;
   color: var(--ink) !important;
   font: 500 10px var(--font-ui) !important;
+}
+
+/* ---------- Search panel (results grouped by kind) ---------- */
+.search-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+.search-head-btn {
+  min-height: var(--hit);
+  padding-inline: var(--s-2);
+  border: 0;
+  background: transparent;
+  color: var(--heading);
+  font-weight: 600;
+  font-size: var(--fs-xs);
+}
+.search-count {
+  font-variant-numeric: tabular-nums;
+}
+.search-group + .search-group {
+  border-top: 1px solid var(--line);
+  margin-top: var(--s-1);
+  padding-top: var(--s-1);
+}
+.search-group-k {
+  padding: var(--s-1) var(--s-4) 0;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+.search-row-ic {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--field);
+  color: var(--muted);
+}
+
+/* ---------- The map page's layers ---------- */
+/* The top: search and categories, floating over the map (the map stays the screen, SPEC N1). */
+.app-top {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(var(--s-3) + env(safe-area-inset-top));
+  z-index: 5;
+  display: grid;
+  gap: var(--s-2);
+  pointer-events: none;
+}
+.app-top > * {
+  pointer-events: auto;
+}
+.app-top .cat-wrap {
+  pointer-events: none;
+}
+/* Over the map, the results float over the pills under them instead of pushing the pills down onto the card. */
+.app-top .search {
+  position: relative;
+  z-index: 1;
+}
+.app-top .search-panel {
+  position: absolute;
+  inset-inline: var(--gutter);
+  top: calc(100% + var(--s-2));
+}
+.app-top .cat-wrap > * {
+  pointer-events: auto;
+}
+.map-page .sheet-host {
+  z-index: 4;
+}
+.toast-host {
+  position: absolute;
+  inset-inline: 0;
+  bottom: calc(var(--sheet-h, 0px) + var(--s-4) + env(safe-area-inset-bottom));
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  padding-inline: var(--gutter);
+  pointer-events: none;
+}
+.toast-host .toast {
+  pointer-events: auto;
 }
